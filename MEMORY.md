@@ -1,6 +1,6 @@
 # MEMORY — session handoff
 
-**Purpose:** paste this (plus [`AGENT_RULES.md`](./AGENT_RULES.md)) into a **new chat** so an agent can continue without re-reading the repo or rediscovering anything. Last updated 2026-10-10, after fixing the first red CI run (Module 18 import-time client).
+**Purpose:** paste this (plus [`AGENT_RULES.md`](./AGENT_RULES.md)) into a **new chat** so an agent can continue without re-reading the repo or rediscovering anything. Last updated 2026-10-12, after adding Module 0, rewriting Module 2's notebooks, and adding `topics.md` + `learning_prompt.md`.
 
 ---
 
@@ -8,8 +8,9 @@
 
 | Module | Status | What exists |
 |---|---|---|
+| **0 Python Core Basics** | ✅ new (2026-10-12) | `python_basics.ipynb` (variables → types → collections → control flow → loops → functions → a minimal class → imports, executed clean), `NOTES.md` |
 | 1 Foundations | 📖 theory | `info.txt`, `NOTES.md` |
-| 2 Python Essentials | 📓 notebooks | `async.ipynb`, `pydantic.ipynb`, `NOTES.md` |
+| **2 Python Essentials** | ✅ rewritten (2026-10-12) | `async.ipynb`, `pydantic.ipynb` rebuilt with more varied, non-repetitive examples (order/user/employee/customer/ticket/event/rectangle instead of "patient" x10), executed end-to-end via `jupyter nbconvert --execute`, zero errors. `NOTES.md` unchanged — still accurate. |
 | **3 LangChain Agents** | ✅ verified | 2 uv projects + `NOTES.md`. **Not rotten after all** — already on LangChain 1.x (`create_agent`, `init_chat_model`, `langchain-tavily`). Multi-Agent pipeline runs end to end; both Streamlit apps boot (HTTP 200) |
 | **4 LangGraph Fundamentals** | ✅ verified | 6 files in `project/` + `NOTES.md` |
 | **5 Workflow Patterns** | ✅ verified | 5 files + `NOTES.md` |
@@ -30,7 +31,7 @@
 | **17 LLM Gateway** | ✅ verified | `gateway.py`, `probe_providers.py`, `test_gateway.py` (26 pass, 0 calls), `live_check.py`, `NOTES.md` — Groq+DeepSeek+Gemini, real fallback proven |
 | 20, 22 | 📋 **not built** | `README.md` build spec only. 17 needs an OpenAI key to be meaningful; 20 needs Pinecone; 22 needs Neo4j **and** a vision model |
 
-**Docs at root:** `README.md` (beginner roadmap) · `LEARNPLAN.md` (how to study) · `AGENT_RULES.md` (stack + pitfalls) · `OpenAI.md` (provider switch) · `VERIFICATION.md` (**proof + key matrix + costs**) · `.env.example` (every key annotated) · `verify.sh` (regenerate proofs into `proofs/`) · this file.
+**Docs at root:** `README.md` (beginner roadmap) · `LEARNPLAN.md` (how to study) · `AGENT_RULES.md` (stack + pitfalls) · `OpenAI.md` (provider switch) · `VERIFICATION.md` (**proof + key matrix + costs**) · `.env.example` (every key annotated) · `verify.sh` (regenerate proofs into `proofs/`) · `topics.md` (per-module topics + prerequisites, for feeding to an external AI) · `learning_prompt.md` (the prompt to pair with `topics.md`) · this file.
 
 **Keys:** `GROQ_API_KEY` is the only one truly needed (modules 4–14, 16, 18, 19). `TAVILY_API_KEY` for 3, 7, 10, 11, 13, 18. Optional: `LANGSMITH_API_KEY` (6, 10), `OPENWEATHER_API_KEY` (11, degrades by design). Not-yet-built: `PINECONE_API_KEY` (20), `NEO4J_*` (22). Embeddings are local MiniLM — no key.
 
@@ -126,6 +127,7 @@ Checklist, in order:
 | 8 | `NOTES.md` for Modules 17–22 | — | write as each is built |
 | ~~9~~ | ~~Move CI workflows to repo root~~ | — | ✅ **done** — see §6c |
 | 10 | Module 10's weak harness rows | low | Verification, Observability, Context trimming, thread deletion — all in `HARNESS_REVIEW.md` §11 |
+| 11 | `README.md`'s "📚 Module index" doesn't list Module 0 yet | low | not touched this session — only `MEMORY.md`/`topics.md` were updated; add a line there if the beginner roadmap should mention it |
 
 **Keys now configured:** Groq ✅, DeepSeek ✅ (was 402, now topped up ~$2), Gemini ✅. Still missing: `PINECONE_API_KEY` (M20), `NEO4J_*` (M22).
 
@@ -202,6 +204,14 @@ Discovered via Module 3: venv **console scripts embed the absolute path**. After
 Modules 4–19 were rebuilt after renaming so they were fine; Module 3's preserved venvs kept the stale paths.
 
 **If you rename a project folder, run `uv sync` in it.** A byte-level path rewrite is *not* a safe shortcut: I tried it and corrupted 2,769 `.pyc` files, because the em-dash is 3 bytes and the hyphen is 1, which breaks length-prefixed bytecode strings (`UnicodeDecodeError: invalid continuation byte`). Recovered by deleting all `__pycache__` — `.pyc` is pure cache and regenerates.
+
+## 6f. External-AI learning workflow + Module 0 (2026-10-12)
+
+Added `topics.md` (topics + prerequisites per module, 0-22) and `learning_prompt.md` (a copy-paste tutor prompt instructing a chatbot to teach the theory one topic at a time, checking prerequisites first). Intended use: paste `learning_prompt.md` then `topics.md` into any chatbot.
+
+Added **Module 0 — Python Core Basics (Recap)**: one notebook covering only what Module 2 already lists as its own prerequisite ("functions, dicts, classes, imports") — variables/types, operators, strings, `list`/`tuple`/`dict`/`set`, `if`/`for`/`while`, functions, a minimal class, imports. Executed clean via `nbconvert --execute`, zero errors. Not a full Python course by design — a true beginner's starting point before Module 1.
+
+Module 2's `async.ipynb`/`pydantic.ipynb` were rebuilt in place (same concepts, more varied examples instead of "patient" repeated through every Pydantic feature) and re-executed clean. `NOTES.md` for Module 2 was left as-is — it was already accurate.
 
 ## 7. Working agreements that held up
 
