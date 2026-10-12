@@ -9,6 +9,7 @@
 ![LangChain](https://img.shields.io/badge/LangChain-1.3.1-1C3C3C?style=for-the-badge)
 ![uv](https://img.shields.io/badge/uv-managed-DE5FE9?style=for-the-badge)
 ![Groq](https://img.shields.io/badge/Groq-free_tier-F55036?style=for-the-badge)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
 ![Built](https://img.shields.io/badge/Modules_3–19,_21-✅_built_&_verified-2EA043?style=flat-square)
 ![Planned](https://img.shields.io/badge/Modules_20,_22-📋_need_keys-8957E5?style=flat-square)
@@ -38,6 +39,7 @@ Not Module 1. Here's the honest reasoning:
 
 | Module | What it is | What to do |
 |:--|:--|:--|
+| 0️⃣ **Python Core Basics** *(optional)* | Variables, loops, functions, classes, imports | 📖 **Only if you're new to Python.** Already comfortable? Skip straight to 1. |
 | 1️⃣ **Foundations** | Concepts only, no code | 📖 **Skim for 20 min.** Good vocabulary, nothing to run. |
 | 2️⃣ **Python Essentials** | `async` + Pydantic | ✅ **Check, don't study.** Can you read `async def` / `await`, and `class X(BaseModel)`? If yes, move on. You'll need it from Module 7. |
 | 3️⃣ **LangChain Agents** | The *old* way of building agents | 👀 **Skim only.** This is the approach LangGraph replaced. Useful as contrast, not as a foundation. |
@@ -93,6 +95,12 @@ Look at the output **before** you open the file. Then read [`LEARNPLAN.md`](./LE
 ---
 
 ## 📚 Module index
+
+### ⚪ Phase 0 — Absolute Beginners *(optional, skip if you already know Python)*
+
+| # | Module | You learn | Status |
+|:-:|:--|:--|:-:|
+| 0 | [Python Core Basics](./Module%200%20-%20Python%20Core%20Basics%20%28Recap%29) | Variables, types, collections, control flow, functions, a minimal class, imports | ✅ built |
 
 ### 🟢 Phase 1 — Foundations *(skim)*
 
@@ -186,6 +194,7 @@ Put your keys in a `.env` inside the module folder. `.env` is gitignored everywh
 | 🧠 **[MEMORY.md](./MEMORY.md)** | **Starting a fresh chat?** Paste this + `AGENT_RULES.md` and an agent can continue without re-reading the repo: module status, the pitfall list, remaining work prioritised, and the exact checklist for when an OpenAI key arrives. |
 | ✅ **[VERIFICATION.md](./VERIFICATION.md)** | **Proof it runs.** Real captured output from every built module, what is honestly *not* verified, the full key matrix, and what it costs (~$0.09 a full pass). Regenerate with `./verify.sh`. |
 | 🔄 **[OpenAI.md](./OpenAI.md)** | If you have an OpenAI key. Switching provider is one env var; it also *removes* the `json_mode` workaround and the parallel-tool-call limitation. Includes cost warnings and an honest verification table. |
+| 🗂️ **[topics.md](./topics.md)** + **[learning_prompt.md](./learning_prompt.md)** | Want a chatbot to teach you the *theory*, not just the code. Paste `learning_prompt.md` then `topics.md` into any chatbot for a one-topic-at-a-time walkthrough, prerequisites checked first. |
 
 Every built module also has a **`NOTES.md`** written for a beginner — what each file does, why, and a "Gotchas we hit" section at the end. **Read the gotchas twice:** once now, once when you're stuck.
 
