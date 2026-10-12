@@ -245,4 +245,4 @@ b03ba1f  Module 14 complete: layered guardrails
 03d733e  Module 4
 ```
 
-Remote: `github.com:Aakif9866/Agentic-AI-.git` · branch `main`
+Remote: `github.com:Aakif9866/Agentic-AI.git` · branch `main` (GitHub renamed the repo from `Agentic-AI-`; old remote URL still redirects, but `git remote -v` needs updating locally — ask the user before repointing it, that's a sensitive action)

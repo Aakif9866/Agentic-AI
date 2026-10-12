@@ -78,8 +78,8 @@ That last criterion exists because of a specific failure mode: a filter that blo
 
 | Commit | What landed |
 |---|---|
-| [`b03ba1f`](https://github.com/Aakif9866/Agentic-AI-/commit/b03ba1f) | The supervisor + four guardrail layers. Specialists as `create_agent` instances wrapped as tools; middleware ordered cheap-and-deterministic first, LLM judge last. |
-| [`22dadcf`](https://github.com/Aakif9866/Agentic-AI-/commit/22dadcf) | The eval harness **and the three guardrail fixes it uncovered**. |
+| [`b03ba1f`](https://github.com/Aakif9866/Agentic-AI/commit/b03ba1f) | The supervisor + four guardrail layers. Specialists as `create_agent` instances wrapped as tools; middleware ordered cheap-and-deterministic first, LLM judge last. |
+| [`22dadcf`](https://github.com/Aakif9866/Agentic-AI/commit/22dadcf) | The eval harness **and the three guardrail fixes it uncovered**. |
 
 Code: [`Module 14/main.py`](../Module%2014%20-%20Guardrails%20+%20Project%20-%20Multi-Agent%20Supervisor%20System/main.py), [`guardrails.py`](../Module%2014%20-%20Guardrails%20+%20Project%20-%20Multi-Agent%20Supervisor%20System/guardrails.py) · Evals: [`run_evals.py`](../Module%2016%20-%20AI%20Agent%20Evaluation/evals/run_evals.py), [`dataset.jsonl`](../Module%2016%20-%20AI%20Agent%20Evaluation/evals/dataset.jsonl)
 
@@ -112,7 +112,7 @@ What's missing: a hosting account. The remaining work is ~30 minutes (Render →
 
 ## 6. Measure — real before/after
 
-Both runs are from the same 31-case suite against the same agent; the only change between them is the guardrail fixes in [`22dadcf`](https://github.com/Aakif9866/Agentic-AI-/commit/22dadcf).
+Both runs are from the same 31-case suite against the same agent; the only change between them is the guardrail fixes in [`22dadcf`](https://github.com/Aakif9866/Agentic-AI/commit/22dadcf).
 
 | Category | Before | After | Δ |
 |---|---|---|---|
