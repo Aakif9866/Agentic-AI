@@ -6,7 +6,7 @@ import { meta, tracks, type Meta } from "./resources";
 // The course lives one level up; topics.md + each module's NOTES.md are the
 // single source of truth — this site only re-arranges them.
 const ROOT = path.join(process.cwd(), "..");
-export const REPO = "https://github.com/Aakif9866/Agentic-AI-";
+export const REPO = "https://github.com/Aakif9866/Agentic-AI";
 
 export type Module = Meta & {
   id: number;
