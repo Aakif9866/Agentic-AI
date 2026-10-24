@@ -1,0 +1,25 @@
+# Render Blueprint — infrastructure as code.
+# Render → New → Blueprint → pick this repo, and it creates every service below.
+# Each later push re-syncs them. Paths are relative to the repo root.
+
+services:
+  # The course website (web/) as a free static site.
+  # Build runs from the repo root because the site reads ../topics.md and ../Module */NOTES.md.
+  - type: web
+    runtime: static
+    name: agentic-ai-course-site
+    buildCommand: cd web && npm ci && npm run build
+    staticPublishPath: web/out
+
+  # Module 9's LangGraph chatbot API, built from its Dockerfile.
+  - type: web
+    runtime: docker
+    name: module9-agent-api
+    plan: free
+    rootDir: "Module 9 - Deployment (Docker, CI-CD, Render)"
+    dockerfilePath: "./Module 9 - Deployment (Docker, CI-CD, Render)/Dockerfile"
+    dockerContext: "./Module 9 - Deployment (Docker, CI-CD, Render)"
+    healthCheckPath: /health
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false # Render asks for the value when you create the Blueprint; never commit it

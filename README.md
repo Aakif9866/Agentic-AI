@@ -27,6 +27,10 @@
 
 ---
 
+## 🌐 Course website
+
+Prefer browsing to reading folders? [`web/`](./web) is a Next.js site that lays the whole course out as tracks, with per-module topics, prerequisites, videos, articles and the full notes, plus progress tracking. `cd web && npm install && npm run dev`.
+
 ## 🎯 Where to start
 
 <div align="center">
