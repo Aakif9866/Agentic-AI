@@ -1,5 +1,6 @@
 // Hand-curated per-module metadata. Every YouTube id was checked via oEmbed
-// (title + channel) and every article URL returned 200 on 2026-10-24.
+// (title + channel) and every article URL returned 200 on 2026-10-24;
+// videos added 2026-11-04 were checked the same way.
 
 export type Kind = "video" | "course" | "docs" | "article" | "paper";
 export type Resource = { kind: Kind; title: string; by: string; url: string };
@@ -39,6 +40,8 @@ export const meta: Record<number, Meta> = {
     r("docs", "uv — Python package & project manager", "Astral", "https://docs.astral.sh/uv/"),
   ]},
   1: { track: "foundations", status: "theory", tagline: "From generative AI to agentic AI — the vocabulary for everything after.", resources: [
+    yt("wjZofJX0v4M", "Transformers, the Tech Behind LLMs", "3Blue1Brown"),
+    yt("ZVPlLaehjLk", "Agentic AI Frameworks Explained: Workflows, Multi-Agent & Production", "IBM Technology"),
     yt("zjkBMFhNj_g", "Intro to Large Language Models", "Andrej Karpathy"),
     yt("LPZh9BOjkQs", "Large Language Models Explained Briefly", "3Blue1Brown"),
     yt("F8NKVhkZZWI", "What are AI Agents?", "IBM Technology"),
@@ -49,6 +52,8 @@ export const meta: Record<number, Meta> = {
     r("paper", "ReAct: Synergizing Reasoning and Acting in LLMs", "Yao et al.", "https://arxiv.org/abs/2210.03629"),
   ]},
   2: { track: "foundations", status: "built", tagline: "async/await for concurrency, Pydantic as the contract for LLM output.", resources: [
+    yt("t5Bo1Je9EmE", "Python Asynchronous Programming – AsyncIO & Async/Await", "Tech With Tim"),
+    yt("XIdQ6gO3Anc", "Pydantic Tutorial • Solving Python’s Biggest Problem", "pixegami"),
     yt("Qb9s3UiMSTA", "Asyncio in Python – Full Tutorial", "Tech With Tim"),
     yt("Vj-iU-8_xLs", "Pydantic Tutorial", "ArjanCodes"),
     r("docs", "asyncio — Asynchronous I/O", "python.org", "https://docs.python.org/3/library/asyncio.html"),
@@ -56,6 +61,8 @@ export const meta: Record<number, Meta> = {
     lc("langchain/structured-output", "Structured Output"),
   ]},
   3: { track: "foundations", status: "built", tagline: "A single tool-using agent, then a Search → Reader → Writer → Critic pipeline.", resources: [
+    yt("lG7Uxts9SXs", "LangChain Crash Course for Beginners", "freeCodeCamp.org"),
+    yt("J7j5tCB_y4w", "LangChain Full Crash Course – AI Agents in Python", "NeuralNine"),
     yt("1bUy-1hGZpI", "What is LangChain?", "IBM Technology"),
     dlai("functions-tools-agents-langchain", "Functions, Tools and Agents with LangChain"),
     lc("langchain/agents", "Agents"),
@@ -63,12 +70,15 @@ export const meta: Record<number, Meta> = {
     r("docs", "Streamlit Documentation", "Streamlit", "https://docs.streamlit.io/"),
   ]},
   4: { track: "langgraph", status: "built", tagline: "State, nodes, edges — chaining, parallel fan-out, routing and loops.", resources: [
+    yt("qaWOwbFw3cs", "LangGraph 101: It’s Better Than LangChain", "James Briggs"),
+    yt("HGUe8p7yUqg", "LangGraph Core Concepts: Nodes, Edges and State", "Analytics Vidhya"),
     langgraphCourse,
     dlai("ai-agents-in-langgraph", "AI Agents in LangGraph"),
     lc("langgraph/overview", "LangGraph Overview"),
     lc("langgraph/graph-api", "Graph API: State, Nodes & Edges"),
   ]},
   5: { track: "langgraph", status: "built", tagline: "Send, Command, multiway routing, map-reduce and capped refinement.", resources: [
+    yt("5Autf3g1NMs", "Combine Control Flow and State Updates with Command", "Mohamed Naji Aboo"),
     langgraphCourse,
     yt("JQznvlSatPQ", "LangGraph: Controllability with Map-Reduce", "LangChain"),
     yt("5iYV0q6eKbM", "Map-Reduce with the Send() API", "A.I Engineering BootCamp"),
@@ -85,12 +95,17 @@ export const meta: Record<number, Meta> = {
     r("docs", "LangSmith", "LangChain Docs", "https://docs.langchain.com/langsmith/home"),
   ]},
   7: { track: "langgraph", status: "built", tagline: "The chat ⇄ tools loop, parallel calls, trimming context and safe tools.", resources: [
+    yt("kwvA2Cxntuw", "LLM Function Calling Explained", "Gary Explains"),
+    yt("QiRdYCNXAxk", "How LLM Tool Calling Works", "Tommy Eberle"),
     yt("MoHtLAhoMp4", "Introduction to Tool Use with LangGraph’s ToolNode", "Mohamed Naji Aboo"),
     lc("langchain/tools", "Tools"),
     r("article", "Writing Effective Tools for Agents", "Anthropic", "https://www.anthropic.com/engineering/writing-tools-for-agents"),
     contextEng,
   ]},
   8: { track: "langgraph", status: "built", tagline: "PDF → chunks → FAISS as a tool, plus interrupt() for human approval.", resources: [
+    yt("klTvEwg3oJ4", "Vector Databases Are So Hot Right Now. WTF Are They?", "Fireship"),
+    yt("wgfSDrqYMJ4", "What Are Word Embeddings?", "IBM Technology"),
+    yt("qN_2fnOPY-M", "Local RAG from Scratch (Step by Step)", "Daniel Bourke"),
     ragFromScratch,
     yt("T-D1OfcDW1M", "What is Retrieval-Augmented Generation (RAG)?", "IBM Technology"),
     dlai("langchain-chat-with-your-data", "LangChain: Chat with Your Data"),
@@ -126,6 +141,10 @@ export const meta: Record<number, Meta> = {
     r("article", "How We Built Our Multi-Agent Research System", "Anthropic", "https://www.anthropic.com/engineering/multi-agent-research-system"),
   ]},
   12: { track: "multi", status: "built", tagline: "Tools as a protocol: a FastMCP server and a session-holding client.", resources: [
+    yt("eur8dUO9mvE", "What is MCP? Integrate AI Agents with Databases & APIs", "IBM Technology"),
+    yt("CQywdSdi5iA", "The Model Context Protocol (MCP)", "Anthropic"),
+    yt("HyzlYwjoXOQ", "Claude’s Model Context Protocol Is Here… Let’s Test It", "Fireship"),
+    yt("tzrwxLNHtRY", "Model Context Protocol Clearly Explained", "codebasics"),
     yt("7j_NE6Pjv-E", "Model Context Protocol (MCP), Clearly Explained", "Greg Isenberg"),
     dlai("mcp-build-rich-context-ai-apps-with-anthropic", "MCP: Build Rich-Context AI Apps"),
     r("docs", "Introduction to MCP", "modelcontextprotocol.io", "https://modelcontextprotocol.io/docs/getting-started/intro"),
@@ -139,6 +158,7 @@ export const meta: Record<number, Meta> = {
     lc("langgraph/streaming", "Streaming"),
   ]},
   14: { track: "multi", status: "built", tagline: "Four guardrail layers, cheap → expensive, around a supervisor of tools.", resources: [
+    yt("hrLAU8nG63c", "AI Prompt Injection Attacks Explained", "Practical DevSecOps"),
     yt("3DfV6URqrZA", "NeMo Guardrails: Tame Your LLM", "Coding Crash Courses"),
     dlai("safe-and-reliable-ai-via-guardrails", "Safe and Reliable AI via Guardrails"),
     lc("langchain/guardrails", "Guardrails"),
@@ -146,12 +166,16 @@ export const meta: Record<number, Meta> = {
     r("article", "OWASP Top 10 for LLM Applications", "OWASP", "https://genai.owasp.org/llm-top-10/"),
   ]},
   15: { track: "production", status: "built", tagline: "Most agent failures are harness failures — audit one with evidence.", resources: [
+    yt("D7_ipDqhtwk", "How We Build Effective Agents", "Barry Zhang · Anthropic"),
+    yt("ZaPbP9DwBOE", "Don’t Learn AI Agents Without Learning These Fundamentals", "KodeKloud"),
     yt("Jp9_hpys75I", "Building Effective Agents (narrated walkthrough)", "Audio Learn"),
     contextEng,
     buildingAgents,
     r("article", "Writing Effective Tools for Agents", "Anthropic", "https://www.anthropic.com/engineering/writing-tools-for-agents"),
   ]},
   16: { track: "production", status: "built", tagline: "31 cases, LLM-as-judge and five dimensions that gate CI.", resources: [
+    yt("Qj3u_kzfJVo", "LLM-as-a-Judge: Evaluating LLMs with LLMs", "Evidently AI"),
+    yt("pnlT_xatpVQ", "LLM-as-a-Judge 101", "Arize AI"),
     yt("_9Rvb46Pbmg", "Evaluating AI Agents: Code, LLMs & Human Feedback", "Data Science Dojo"),
     yt("DBUK_0ZSCD8", "From BLEU to G-Eval: LLM-as-a-Judge Techniques & Limits", "deepsense"),
     dlai("evaluating-ai-agents", "Evaluating AI Agents"),
@@ -160,6 +184,8 @@ export const meta: Record<number, Meta> = {
     r("article", "Patterns for Building LLM-based Systems", "Eugene Yan", "https://eugeneyan.com/writing/llm-patterns/"),
   ]},
   17: { track: "production", status: "built", tagline: "One layer over Groq, DeepSeek and Gemini with measured fallback.", resources: [
+    yt("XUWUrDnRtXg", "The LiteLLM Setup Guide: One API for Many LLMs", "Simple Tech"),
+    yt("4mye7oi0CXk", "Use Any LLM Provider with LiteLLM", "Venelin Valkov"),
     yt("r_ek2Ze99f8", "LLM Gateways Explained (LiteLLM)", "Nidhi Chouhan"),
     r("docs", "LiteLLM (reference gateway)", "LiteLLM", "https://docs.litellm.ai/docs/"),
     r("article", "Patterns of Distributed Systems", "Martin Fowler", "https://martinfowler.com/articles/patterns-of-distributed-systems/"),
@@ -171,12 +197,15 @@ export const meta: Record<number, Meta> = {
     r("paper", "Corrective Retrieval Augmented Generation", "Yan et al.", "https://arxiv.org/abs/2401.15884"),
   ]},
   19: { track: "production", status: "built", tagline: "Writer + reviewer loop with deterministic checks, shipped in a container.", resources: [
+    yt("ZVPlLaehjLk", "Agentic AI Frameworks Explained: Workflows, Multi-Agent & Production", "IBM Technology"),
     yt("v5ymBTXNqtk", "Reflection Agents", "LangChain"),
     buildingAgents,
     r("docs", "Docker: Get Started", "Docker", "https://docs.docker.com/get-started/"),
     r("docs", "Deploy a FastAPI App", "Render", "https://render.com/docs/deploy-fastapi"),
   ]},
   20: { track: "rag", status: "spec", tagline: "Route first, retrieve from a hosted vector DB, grade, rewrite.", resources: [
+    yt("0z9_MhcYvcY", "What is Agentic RAG?", "IBM Technology"),
+    yt("klTvEwg3oJ4", "Vector Databases Are So Hot Right Now. WTF Are They?", "Fireship"),
     ragFromScratch,
     dlai("building-agentic-rag-with-llamaindex", "Building Agentic RAG"),
     lc("langchain/rag", "Build a RAG Agent"),
@@ -189,6 +218,8 @@ export const meta: Record<number, Meta> = {
     buildingAgents,
   ]},
   22: { track: "rag", status: "spec", tagline: "Multi-hop questions via a knowledge graph; answers hidden in charts.", resources: [
+    yt("knDDGYHnnSI", "GraphRAG: The Marriage of Knowledge Graphs and RAG", "Emil Eifrem · AI Engineer"),
+    yt("r09tJfON6kE", "GraphRAG: LLM-Derived Knowledge Graphs for RAG", "Alex Chao"),
     yt("2o0Q85JUZNk", "Graph RAG Simply Explained", "codebasics"),
     dlai("knowledge-graphs-rag", "Knowledge Graphs for RAG"),
     r("paper", "From Local to Global: A GraphRAG Approach", "Microsoft Research", "https://arxiv.org/abs/2404.16130"),

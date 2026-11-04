@@ -2,13 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import { meta, tracks, type Meta } from "./resources";
+import { beginner, type Beginner } from "./beginner";
 
 // The course lives one level up; topics.md + each module's NOTES.md are the
 // single source of truth — this site only re-arranges them.
 const ROOT = path.join(process.cwd(), "..");
 export const REPO = "https://github.com/Aakif9866/Agentic-AI";
 
-export type Module = Meta & {
+export type Module = Meta & Beginner & {
   id: number;
   title: string;
   dir: string;
@@ -62,7 +63,7 @@ function load(): Module[] {
         .filter((f) => f.startsWith(`${dir}/`) && f !== shown && !SKIP.test(f))
         .map((f) => ({ path: f.slice(dir.length + 1), group: groupOf(f) as Module["files"][number]["group"] }));
 
-      return { id, title, dir, topics, prereqs: prereqPart.trim(), notes, toc, files, ...meta[id] };
+      return { id, title, dir, topics, prereqs: prereqPart.trim(), notes, toc, files, ...meta[id], ...beginner[id] };
     })
     .sort((a, b) => a.id - b.id);
 }

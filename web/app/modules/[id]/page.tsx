@@ -125,6 +125,26 @@ export default async function ModulePage({ params }: PageProps<"/modules/[id]">)
           </div>
         </header>
 
+        <section className="card reveal mt-10 overflow-hidden">
+          <div className="h-1" style={{ background: "var(--brand)" }} />
+          <div className="p-6 sm:p-8">
+            <p className="text-xs font-bold uppercase tracking-wider text-accent">Start here · in plain English</p>
+            <p className="mt-3 text-lg leading-relaxed text-heading">{m.plain}</p>
+            <h2 className="mt-8 text-sm font-bold uppercase tracking-wider text-muted">Key words</h2>
+            <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+              {m.terms.map(([term, def]) => (
+                <div key={term} className="klyro-corners border-l-2 border-accent bg-surface-2 px-4 py-3">
+                  <dt className="font-mono text-[13px] font-semibold text-accent">{term}</dt>
+                  <dd className="mt-0.5 text-[14px] leading-snug">{def}</dd>
+                </div>
+              ))}
+            </dl>
+            <p className="mt-6 text-[14px] text-muted">
+              Suggested order: read this box → watch one video below → skim the course notes → open the code and run it.
+            </p>
+          </div>
+        </section>
+
         <Section title="What you’ll learn">
           <ul className="grid gap-3 sm:grid-cols-2">
             {m.topics.map((t, i) => (
