@@ -22,19 +22,19 @@ export default function Home() {
     <main className="mx-auto max-w-6xl px-4 sm:px-6">
       {/* Hero */}
       <section className="pt-16 pb-14 text-center sm:pt-24 sm:pb-20">
-        <p className="text-sm font-semibold text-accent">From Python basics to production agents</p>
-        <h1 className="mx-auto mt-3 max-w-4xl text-[clamp(2.5rem,7vw,5rem)] font-bold leading-[1.04] tracking-[-0.035em]">
+        <p className="inline-block border border-accent px-3 py-1 text-xs font-bold uppercase tracking-wider text-accent klyro-corners">From Python basics to production agents</p>
+        <h1 className="mx-auto mt-5 max-w-4xl text-4xl font-bold leading-[1.05] tracking-[-0.035em] lg:text-7xl">
           Build AI agents that{" "}
-          <span className="bg-linear-to-r from-sky-500 via-violet-500 to-pink-500 bg-clip-text text-transparent">actually work.</span>
+          <span className="brand-text">actually work.</span>
         </h1>
         <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-muted sm:text-xl">
           {modules.length} modules of runnable LangGraph code, plain-English notes, and {resourceCount} hand-picked videos, courses and papers — arranged as one clear path.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Link href={`/modules/${ordered[0].id}`} className="press rounded-full bg-accent px-6 py-3 font-medium text-white hover:brightness-110">
+          <Link href={`/modules/${ordered[0].id}`} className="press btn btn-brand">
             Start from Module 0
           </Link>
-          <Link href="/modules/4" className="press rounded-full px-6 py-3 font-medium text-accent ring-1 ring-accent/40 ring-inset hover:bg-accent/10">
+          <Link href="/modules/4" className="press btn btn-outline">
             Jump to LangGraph →
           </Link>
         </div>
@@ -44,16 +44,17 @@ export default function Home() {
 
       {/* How to use */}
       <section className="mb-14">
-        <p className="text-sm font-semibold text-muted">New here? Every module page works the same way</p>
+        <div className="brand-rule" />
+        <p className="mt-3 text-sm font-bold uppercase tracking-wider text-accent">New here? Every module page works the same way</p>
         <ol className="mt-4 grid gap-4 sm:grid-cols-3">
           {[
             ["Watch", "Each module opens with hand-picked videos and courses that explain the idea from zero."],
             ["Read", "Then plain-English course notes walk through every file, including the mistakes we hit."],
             ["Run", "Finally open the code on GitHub, run it, and break it on purpose — that’s where it sticks."],
           ].map(([title, body], i) => (
-            <li key={title} className="card p-6">
-              <span className="text-sm font-semibold text-accent">Step {i + 1}</span>
-              <h3 className="mt-1 text-lg font-semibold">{title}</h3>
+            <li key={title} className="card reveal p-6" style={{ "--d": `${i * 80}ms` } as React.CSSProperties}>
+              <span className="grid size-9 place-items-center klyro-corners border border-accent text-sm font-bold text-accent">{i + 1}</span>
+              <h3 className="mt-3 text-lg font-semibold">{title}</h3>
               <p className="mt-1 text-[15px] text-muted">{body}</p>
             </li>
           ))}
@@ -62,8 +63,8 @@ export default function Home() {
 
       {/* Core path */}
       <section className="card relative overflow-hidden p-6 sm:p-10">
-        <div className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-linear-to-br from-violet-500/25 to-sky-400/25 blur-3xl" />
-        <p className="text-sm font-semibold text-muted">If you only have a week</p>
+        <div className="absolute inset-x-0 top-0 h-1" style={{ background: "var(--brand)" }} />
+        <p className="text-sm font-bold uppercase tracking-wider text-accent">If you only have a week</p>
         <h2 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">The four modules that matter.</h2>
         <p className="mt-2 max-w-2xl text-muted">Everything else in the course is built out of these. Learn them deeply and the rest reads easily.</p>
         <ol className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -71,8 +72,8 @@ export default function Home() {
             const m = modules.find((x) => x.id === id)!;
             return (
               <li key={id}>
-                <Link href={`/modules/${id}`} className="press flex h-full flex-col rounded-2xl bg-bg p-5 hover:ring-1 hover:ring-accent/40">
-                  <span className="text-xs font-semibold text-accent">Step {i + 1} · Module {id}</span>
+                <Link href={`/modules/${id}`} className="press card flex h-full flex-col bg-surface-2! p-5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-accent">Step {i + 1} · Module {id}</span>
                   <span className="mt-1 font-semibold leading-snug">{m.title}</span>
                   <span className="mt-2 text-sm text-muted">{m.tagline}</span>
                 </Link>
@@ -87,26 +88,26 @@ export default function Home() {
         {byTrack.map((t, ti) => (
           <section key={t.id}>
             <div className="mb-6 flex items-end gap-4">
-              <div className={`grid size-11 shrink-0 place-items-center rounded-2xl bg-linear-to-br ${t.gradient} text-lg font-bold text-white shadow-sm`}>{ti + 1}</div>
+              <div className={`klyro-corners grid size-11 shrink-0 place-items-center bg-linear-to-br ${t.gradient} text-lg font-bold text-white shadow-sm`}>{ti + 1}</div>
               <div>
                 <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">{t.name}</h2>
                 <p className="text-muted">{t.blurb}</p>
               </div>
             </div>
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {t.modules.map((m) => (
+              {t.modules.map((m, i) => (
                 <li key={m.id}>
-                  <Link href={`/modules/${m.id}`} className="press card group flex h-full flex-col p-6 hover:shadow-lg">
+                  <Link href={`/modules/${m.id}`} className="press card reveal group flex h-full flex-col p-6" style={{ "--d": `${i * 60}ms` } as React.CSSProperties}>
                     <div className="flex items-center justify-between">
                       <span className={`bg-linear-to-r ${t.gradient} bg-clip-text text-sm font-bold text-transparent`}>Module {m.id}</span>
                       <Check id={m.id} />
                     </div>
-                    <h3 className="mt-2 text-lg font-semibold leading-snug tracking-tight">{m.title}</h3>
+                    <h3 className="mt-2 line-clamp-2 text-lg font-semibold leading-snug tracking-tight group-hover:text-accent">{m.title}</h3>
                     <p className="mt-2 flex-1 text-[15px] text-muted">{m.tagline}</p>
                     <div className="mt-5 flex flex-wrap gap-2 text-xs text-muted">
-                      <span className="rounded-full bg-bg px-2.5 py-1">{statusLabel[m.status]}</span>
-                      <span className="rounded-full bg-bg px-2.5 py-1">{m.topics.length} topics</span>
-                      <span className="rounded-full bg-bg px-2.5 py-1">{m.resources.length} resources</span>
+                      <span className="klyro-corners bg-surface-2 px-2.5 py-1">{statusLabel[m.status]}</span>
+                      <span className="klyro-corners bg-surface-2 px-2.5 py-1">{m.topics.length} topics</span>
+                      <span className="klyro-corners bg-surface-2 px-2.5 py-1">{m.resources.length} resources</span>
                     </div>
                   </Link>
                 </li>
@@ -118,7 +119,8 @@ export default function Home() {
 
       {/* Method */}
       <section id="method" className="scroll-mt-16 pt-24">
-        <p className="text-sm font-semibold text-accent">How to study</p>
+        <div className="brand-rule" />
+        <p className="mt-3 text-sm font-bold uppercase tracking-wider text-accent">How to study</p>
         <h2 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">Working code feels like knowledge. It isn’t.</h2>
         <p className="mt-2 max-w-2xl text-muted">
           Do these six steps for one file at a time, 20–40 minutes each. Full method in{" "}
@@ -126,8 +128,8 @@ export default function Home() {
         </p>
         <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {method.map(([title, body], i) => (
-            <li key={title} className="card p-6">
-              <span className="text-4xl font-bold tracking-tight text-muted/40">{String(i + 1).padStart(2, "0")}</span>
+            <li key={title} className="card reveal p-6" style={{ "--d": `${i * 60}ms` } as React.CSSProperties}>
+              <span className="brand-text text-4xl font-bold tracking-tight">{String(i + 1).padStart(2, "0")}</span>
               <h3 className="mt-2 font-semibold">{title}</h3>
               <p className="mt-1 text-[15px] text-muted">{body}</p>
             </li>

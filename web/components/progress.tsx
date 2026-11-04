@@ -41,7 +41,7 @@ export function Check({ id, className = "" }: { id: number; className?: string }
   return (
     <span
       aria-label={done ? "Completed" : undefined}
-      className={`grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-bold transition-colors ${done ? "bg-[#34c759] text-white" : "ring-1 ring-line ring-inset"} ${className}`}
+      className={`grid size-5 shrink-0 place-items-center rounded-full text-[11px] font-bold transition-colors ${done ? "bg-done text-on-done" : "ring-1 ring-line ring-inset"} ${className}`}
     >
       {done ? "✓" : ""}
     </span>
@@ -54,7 +54,7 @@ export function CompleteButton({ id }: { id: number }) {
     <button
       onClick={() => toggle(id)}
       aria-pressed={done}
-      className={`press rounded-full px-5 py-2.5 text-sm font-medium ${done ? "bg-[#34c759] text-white" : "bg-accent text-white hover:brightness-110"}`}
+      className={`press btn ${done ? "bg-done text-on-done" : "btn-brand"}`}
     >
       {done ? "✓ Completed" : "Mark as complete"}
     </button>
@@ -67,7 +67,7 @@ export function ProgressSummary({ total }: { total: number }) {
   return (
     <div className="flex items-center gap-3 text-sm text-muted">
       <div className="h-1.5 w-32 overflow-hidden rounded-full bg-line" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Course progress">
-        <div className="h-full rounded-full bg-[#34c759] transition-[width] duration-500" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-[image:var(--brand)] transition-[width] duration-500" style={{ width: `${pct}%` }} />
       </div>
       {n} of {total} complete
     </div>

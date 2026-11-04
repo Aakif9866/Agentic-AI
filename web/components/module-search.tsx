@@ -20,14 +20,14 @@ export function ModuleSearch({ items }: { items: SearchItem[] }) {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search topics — e.g. checkpointer, MCP, json_mode"
-        className="card w-full rounded-full px-5 py-3.5 text-[16px] outline-none placeholder:text-muted focus:ring-2 focus:ring-accent"
+        className="card w-full px-5 py-3.5 text-[16px] outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent/30"
       />
       {terms.length > 0 && (
         <ul className="card mt-2 max-h-80 overflow-y-auto p-2" aria-live="polite">
           {hits.length === 0 && <li className="px-4 py-3 text-sm text-muted">No module mentions “{q}”.</li>}
           {hits.map((m) => (
             <li key={m.id}>
-              <Link href={`/modules/${m.id}`} className="press block rounded-xl px-4 py-2.5 hover:bg-line">
+              <Link href={`/modules/${m.id}`} className="press klyro-corners block border-l-2 border-transparent px-4 py-2.5 hover:border-accent hover:bg-surface-2">
                 <span className="text-xs font-semibold text-accent">Module {m.id}</span>
                 <span className="block font-medium leading-snug">{m.title}</span>
                 <span className="block text-sm text-muted">{m.tagline}</span>

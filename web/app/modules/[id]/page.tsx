@@ -38,35 +38,38 @@ const ytId = (url: string) => url.match(/[?&]v=([\w-]{11})/)?.[1];
 function VideoCard({ r }: { r: Resource }) {
   const id = ytId(r.url);
   return (
-    <a href={r.url} target="_blank" rel="noreferrer" className="press card group block overflow-hidden hover:shadow-lg">
-      <div className="relative aspect-video bg-linear-to-br from-zinc-800 to-zinc-950">
+    <a href={r.url} target="_blank" rel="noreferrer" className="press card group relative block overflow-hidden">
+      <div className="relative aspect-video overflow-hidden bg-linear-to-br from-zinc-800 to-zinc-950">
         {id && (
           // eslint-disable-next-line @next/next/no-img-element -- static export, remote thumbnail
           <img src={`https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" className="size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
         )}
         <span className="absolute inset-0 grid place-items-center">
-          <span className="chrome grid size-12 place-items-center rounded-full text-white shadow-lg" style={{ background: "rgb(0 0 0 / 0.45)" }}>
+          <span className="klyro-corners grid size-12 place-items-center text-white shadow-lg transition-transform duration-300 group-hover:scale-110" style={{ background: "var(--brand)" }}>
             {id ? "▶" : "⌕"}
           </span>
         </span>
       </div>
       <div className="p-4">
-        <p className="font-medium leading-snug">{r.title}</p>
-        <p className="mt-1 text-sm text-muted">{r.by}</p>
+        <p className="line-clamp-2 font-semibold leading-snug text-heading">{r.title}</p>
+        <p className="mt-1 text-sm italic text-muted">{r.by}</p>
       </div>
+      <span className="absolute inset-x-0 -bottom-12 bg-accent py-2.5 text-center text-sm font-semibold text-on-accent transition-all duration-300 group-hover:bottom-0 group-focus-visible:bottom-0">
+        Watch on YouTube ↗
+      </span>
     </a>
   );
 }
 
 function ReadRow({ r }: { r: Resource }) {
   return (
-    <a href={r.url} target="_blank" rel="noreferrer" className="press flex items-center gap-4 rounded-2xl px-4 py-3.5 hover:bg-line">
-      <span className={`w-16 shrink-0 rounded-full py-1 text-center text-[11px] font-semibold ${kindTint[r.kind]}`}>{kindLabel[r.kind]}</span>
+    <a href={r.url} target="_blank" rel="noreferrer" className="press klyro-corners group flex items-center gap-4 border-l-2 border-transparent px-4 py-3.5 hover:border-accent hover:bg-surface-2">
+      <span className={`w-16 shrink-0 klyro-corners py-1 text-center text-[11px] font-semibold ${kindTint[r.kind]}`}>{kindLabel[r.kind]}</span>
       <span className="min-w-0 flex-1">
-        <span className="block font-medium leading-snug">{r.title}</span>
+        <span className="block font-semibold leading-snug text-heading group-hover:text-accent">{r.title}</span>
         <span className="block text-sm text-muted">{r.by}</span>
       </span>
-      <span className="text-muted" aria-hidden>↗</span>
+      <span className="text-accent transition-transform group-hover:translate-x-0.5" aria-hidden>↗</span>
     </a>
   );
 }
@@ -74,7 +77,8 @@ function ReadRow({ r }: { r: Resource }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-12">
-      <h2 className="mb-4 text-2xl font-bold tracking-tight">{title}</h2>
+      <div className="brand-rule" />
+      <h2 className="mt-3 mb-5 text-2xl font-bold tracking-tight">{title}</h2>
       {children}
     </section>
   );
@@ -110,22 +114,22 @@ export default async function ModulePage({ params }: PageProps<"/modules/[id]">)
           <Link href="/#tracks" className={`bg-linear-to-r ${track.gradient} bg-clip-text text-sm font-bold text-transparent`}>
             {track.name} · Module {m.id}
           </Link>
-          <h1 className="mt-2 text-[clamp(2rem,5vw,3.25rem)] font-bold leading-[1.08] tracking-[-0.03em]">{m.title}</h1>
+          <h1 className="mt-2 text-3xl font-bold leading-[1.08] tracking-[-0.03em] lg:text-6xl">{m.title}</h1>
           <p className="mt-3 max-w-2xl text-lg text-muted sm:text-xl">{m.tagline}</p>
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <CompleteButton id={m.id} />
-            <a href={githubDir(m.dir)} target="_blank" rel="noreferrer" className="press rounded-full px-5 py-2.5 text-sm font-medium text-accent ring-1 ring-accent/40 ring-inset hover:bg-accent/10">
+            <a href={githubDir(m.dir)} target="_blank" rel="noreferrer" className="press btn btn-outline">
               View code on GitHub ↗
             </a>
-            {m.status === "spec" && <span className="rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">Build spec — not built yet</span>}
+            {m.status === "spec" && <span className="klyro-corners bg-amber-500/15 px-3 py-1 text-xs font-semibold text-amber-700 dark:text-amber-400">Build spec — not built yet</span>}
           </div>
         </header>
 
         <Section title="What you’ll learn">
           <ul className="grid gap-3 sm:grid-cols-2">
-            {m.topics.map((t) => (
-              <li key={t} className="card flex gap-3 p-4 text-[15px] leading-snug">
-                <span className={`mt-1.5 size-2 shrink-0 rounded-full bg-linear-to-br ${track.gradient}`} />
+            {m.topics.map((t, i) => (
+              <li key={t} className="card reveal flex gap-3 p-4 text-[15px] leading-snug" style={{ "--d": `${Math.min(i, 10) * 40}ms` } as React.CSSProperties}>
+                <span className={`mt-1.5 size-2 shrink-0 rotate-45 bg-linear-to-br ${track.gradient}`} />
                 <span className="prose min-w-0 text-[15px]! leading-snug!"><Markdown components={md}>{t}</Markdown></span>
               </li>
             ))}
@@ -159,7 +163,7 @@ export default async function ModulePage({ params }: PageProps<"/modules/[id]">)
                 const list = m.files.filter((f) => f.group === g);
                 return list.length > 0 && (
                   <div key={g}>
-                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted">{g}</p>
+                    <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-accent">{g}</p>
                     <ul className="space-y-1">
                       {list.map((f) => (
                         <li key={f.path}>
@@ -182,7 +186,7 @@ export default async function ModulePage({ params }: PageProps<"/modules/[id]">)
               </summary>
               <ol className="mt-3 grid gap-x-6 gap-y-1.5 text-[14px] sm:grid-cols-2">
                 {m.toc.map((h) => (
-                  <li key={h.slug}><a href={`#${h.slug}`} className="text-muted hover:text-accent">{h.text}</a></li>
+                  <li key={h.slug}><a href={`#${h.slug}`} className="text-muted hover:text-accent hover:underline">{h.text}</a></li>
                 ))}
               </ol>
             </details>
@@ -194,14 +198,14 @@ export default async function ModulePage({ params }: PageProps<"/modules/[id]">)
 
         <nav className="mt-12 grid gap-3 sm:grid-cols-2">
           {prev ? (
-            <Link href={`/modules/${prev.id}`} className="press card p-5 hover:shadow-lg">
-              <span className="text-sm text-muted">← Previous · Module {prev.id}</span>
+            <Link href={`/modules/${prev.id}`} className="press card p-5">
+              <span className="text-sm font-semibold text-accent">← Previous · Module {prev.id}</span>
               <span className="mt-1 block font-semibold">{prev.title}</span>
             </Link>
           ) : <span />}
           {next && (
-            <Link href={`/modules/${next.id}`} className="press card p-5 text-right hover:shadow-lg">
-              <span className="text-sm text-muted">Next · Module {next.id} →</span>
+            <Link href={`/modules/${next.id}`} className="press card p-5 text-right">
+              <span className="text-sm font-semibold text-accent">Next · Module {next.id} →</span>
               <span className="mt-1 block font-semibold">{next.title}</span>
             </Link>
           )}
