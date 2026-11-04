@@ -42,6 +42,24 @@ export default function Home() {
         <ModuleSearch items={modules.map((m) => ({ id: m.id, title: m.title, tagline: m.tagline, haystack: [m.title, m.tagline, ...m.topics, ...m.toc.map((h) => h.text)].join(" ").toLowerCase() }))} />
       </section>
 
+      {/* How to use */}
+      <section className="mb-14">
+        <p className="text-sm font-semibold text-muted">New here? Every module page works the same way</p>
+        <ol className="mt-4 grid gap-4 sm:grid-cols-3">
+          {[
+            ["Watch", "Each module opens with hand-picked videos and courses that explain the idea from zero."],
+            ["Read", "Then plain-English course notes walk through every file, including the mistakes we hit."],
+            ["Run", "Finally open the code on GitHub, run it, and break it on purpose — that’s where it sticks."],
+          ].map(([title, body], i) => (
+            <li key={title} className="card p-6">
+              <span className="text-sm font-semibold text-accent">Step {i + 1}</span>
+              <h3 className="mt-1 text-lg font-semibold">{title}</h3>
+              <p className="mt-1 text-[15px] text-muted">{body}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
       {/* Core path */}
       <section className="card relative overflow-hidden p-6 sm:p-10">
         <div className="pointer-events-none absolute -top-24 -right-24 size-72 rounded-full bg-linear-to-br from-violet-500/25 to-sky-400/25 blur-3xl" />
