@@ -23,7 +23,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <header className="chrome sticky top-0 z-40 border-b border-line">
           <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
             <Link href="/" className="flex items-center gap-2 text-[15px] font-bold tracking-tight text-heading">
-              <span className="klyro-corners grid size-7 place-items-center text-xs font-bold text-white" style={{ background: "var(--brand)" }}>AI</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icon.svg" alt="" className="size-7" />
               Agentic AI <span className="font-normal text-muted">Course</span>
             </Link>
             <div className="flex items-center gap-5 text-[14px] font-medium text-muted">
