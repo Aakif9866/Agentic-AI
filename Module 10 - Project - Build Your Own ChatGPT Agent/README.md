@@ -83,5 +83,5 @@ Render: New → Web Service → connect repo → it detects the `Dockerfile` (wh
 - [x] Math goes through `calculator`, not mental arithmetic
 - [x] PDF questions cite page numbers
 - [x] Email pauses, `/pending` shows the draft, `/approve` with `edited_body` changes what sends
-- [ ] Deployed to Render, `/health` green on the public URL
+- [x] Deployed to Render (Streamlit app, `/_stcore/health` green): https://agentic-chat-pwvx.onrender.com
 - [x] LangSmith traces for 5 real conversations (calculator, web, PDF, memory, email-approval — project `agentic-ai-course`)
