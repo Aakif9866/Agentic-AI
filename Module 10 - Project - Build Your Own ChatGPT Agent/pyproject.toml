@@ -19,5 +19,16 @@ dependencies = [
     "python-dotenv>=1.2.4",
     "sentence-transformers>=6.1.0",
     "streamlit>=1.65.0",
+    "torch>=2.14",
     "uvicorn>=0.54.0",
 ]
+
+# Linux (the Docker image) gets CPU-only torch: the default PyPI wheel drags in
+# ~3GB of CUDA libraries a GPU-less server never uses. macOS is unaffected.
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
