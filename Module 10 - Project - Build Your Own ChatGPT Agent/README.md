@@ -63,4 +63,4 @@ Render: New → Web Service → connect repo → it detects the `Dockerfile`. Se
 - [x] PDF questions cite page numbers
 - [x] Email pauses, `/pending` shows the draft, `/approve` with `edited_body` changes what sends
 - [ ] Deployed to Render, `/health` green on the public URL
-- [ ] LangSmith traces for 5 real conversations (needs `LANGSMITH_API_KEY`)
+- [x] LangSmith traces for 5 real conversations (calculator, web, PDF, memory, email-approval — project `agentic-ai-course`)
