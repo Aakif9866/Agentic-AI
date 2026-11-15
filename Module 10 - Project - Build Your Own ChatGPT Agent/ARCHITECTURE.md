@@ -12,7 +12,7 @@ The capstone combining Modules 6–9. This document covers components, data flow
 | `backend.py` | The graph: nodes, edges, the system prompt, the checkpointer, the budget cap. Exposes `agent`, `all_thread_ids()`, `pending_approval()`. | import FastAPI |
 | `api.py` | HTTP transport only: request/response shapes, streaming, endpoint routing. | contain agent logic |
 | `ingest.py` | One-off: PDF → FAISS index. | run at request time |
-| `ui_streamlit.py` | Optional local UI. Talks to the graph **directly**, not via HTTP. | be required for the API to work |
+| `ui_streamlit.py` | The public app (what Docker serves). Talks to the graph **directly**, not via HTTP; owns the per-visitor rate limit UI. | be required for the API to work |
 
 **The load-bearing decision:** `backend.py` imports no web framework. That's why Module 15's eval harness and Module 16's test suite can `from backend import agent` without starting a server.
 

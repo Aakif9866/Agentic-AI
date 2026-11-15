@@ -15,6 +15,8 @@ COPY . .
 # saved in the image and the real key comes from the host's env vars.
 RUN TAVILY_API_KEY=build-placeholder uv run --no-sync python ingest.py sample_notes.pdf
 
+# The public app is the Streamlit UI (health check path: /_stcore/health).
+# To serve the JSON API instead, run: uvicorn api:app --host 0.0.0.0 --port ${PORT}
 ENV PORT=8000
 EXPOSE 8000
-CMD ["sh", "-c", "uv run --no-sync uvicorn api:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uv run --no-sync streamlit run ui_streamlit.py --server.address 0.0.0.0 --server.port ${PORT}"]

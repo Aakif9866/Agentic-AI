@@ -1,0 +1,15 @@
+# Klyro "Spectrum": pitch-black neutral surfaces, violet→pink accents.
+[theme]
+base = "dark"
+primaryColor = "#c084fc"
+backgroundColor = "#000000"
+secondaryBackgroundColor = "#0a0a0a"
+textColor = "#e5e5e5"
+borderColor = "#262626"
+font = "sans-serif"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false

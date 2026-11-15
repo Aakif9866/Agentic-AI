@@ -1,5 +1,8 @@
 import os
 import sqlite3
+import threading
+import time
+from collections import defaultdict, deque
 from dotenv import load_dotenv
 from langchain.chat_models import init_chat_model
 from langchain_core.messages import AIMessage, SystemMessage
@@ -81,3 +84,25 @@ def pending_approval(thread_id: str) -> dict | None:
     snapshot = agent.get_state({"configurable": {"thread_id": thread_id}})
     found = [i for task in snapshot.tasks for i in task.interrupts]
     return found[0].value if found else None
+
+
+# Abuse guard for the public app: N questions per visitor per rolling hour.
+# ponytail: in-memory and single-process, so it resets on restart/redeploy and is
+# per-IP (shared Wi-Fi shares a quota). Move to Redis if this ever runs >1 instance.
+RATE_LIMIT_PER_HOUR = int(os.getenv("RATE_LIMIT_PER_HOUR", "15"))
+_hits: dict[str, deque] = defaultdict(deque)
+_hits_lock = threading.Lock()
+
+
+def rate_limit(key: str, consume: bool = True, now: float | None = None) -> tuple[bool, int, int]:
+    """(allowed, questions_left, seconds_until_a_slot_frees). consume=False only peeks."""
+    now = time.time() if now is None else now
+    with _hits_lock:
+        q = _hits[key]
+        while q and q[0] <= now - 3600:
+            q.popleft()
+        if len(q) >= RATE_LIMIT_PER_HOUR:
+            return False, 0, int(q[0] + 3600 - now) + 1 if q else 3600  # cap=0: closed
+        if consume:
+            q.append(now)
+        return True, RATE_LIMIT_PER_HOUR - len(q), 0
