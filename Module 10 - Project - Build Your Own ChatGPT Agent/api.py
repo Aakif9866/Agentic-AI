@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessageChunk
 from langgraph.types import Command
 
 from auth import check_login, make_token, verify_token
-from backend import agent, pending_approval
+from backend import agent, pending_approval, run_config
 
 app = FastAPI(title="ChatGPT-style Agent (Modules 6-9 combined)")
 
@@ -44,7 +44,7 @@ def login(body: LoginIn):
 def chat(body: ChatIn):
     # recursion_limit was missing entirely before Module 15's audit — a runaway
     # chat->tools->chat loop had no app-level ceiling.
-    cfg = {"configurable": {"thread_id": body.thread_id}, "recursion_limit": 25}
+    cfg = run_config(body.thread_id)
 
     def token_stream():
         for chunk, _meta in agent.stream(
@@ -65,7 +65,7 @@ def pending(thread_id: str):
 @app.post("/approve", dependencies=[Depends(require_token)])
 def approve(body: ApproveIn):
     """Resume a paused thread. edited_body lets the human change the draft first."""
-    cfg = {"configurable": {"thread_id": body.thread_id}}
+    cfg = run_config(body.thread_id, "approval")
     resume_value: dict = {"approved": body.approved}
     if body.edited_body:
         resume_value["edited_body"] = body.edited_body

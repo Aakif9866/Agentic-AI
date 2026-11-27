@@ -47,11 +47,6 @@ jobs:
         if: steps.keys.outputs.ok == 'true'
         run: uv sync --frozen
 
-      # The repo ignores faiss_db/, so build the index the docs cases search.
-      - name: Build PDF index
-        if: steps.keys.outputs.ok == 'true'
-        run: uv run python ingest.py sample_notes.pdf
-
       - name: Run eval suite (gate)
         if: steps.keys.outputs.ok == 'true'
         run: uv run python evals/run_evals.py --prefix "ci-pr${{ github.event.pull_request.number }}"

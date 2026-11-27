@@ -14,7 +14,7 @@ from langgraph.types import Command
 from auth import require_login
 from backend import (
     CHAT_MODEL, DATABASE_URL, RATE_LIMIT_PER_HOUR, agent, all_thread_ids,
-    pending_approval, rate_limit, thread_title,
+    pending_approval, rate_limit, run_config, thread_title,
 )
 
 st.set_page_config(page_title="Agent", page_icon="✦", layout="centered")
@@ -115,7 +115,7 @@ def badges(names) -> str:
 if "t" not in st.query_params:
     st.query_params["t"] = str(uuid.uuid4())
 thread_id = st.query_params["t"]
-cfg = {"configurable": {"thread_id": thread_id}, "recursion_limit": 25}
+cfg = {"configurable": {"thread_id": thread_id}}  # reads only; agent runs use run_config()
 messages = agent.get_state(cfg).values.get("messages", [])
 
 # ---------- sidebar ----------
@@ -180,6 +180,21 @@ for m in messages:
                 st.markdown(m.content)
             used = []
 
+# 👍/👎 on the latest answer, attached to its LangSmith trace (Phase 5c).
+last_run = st.session_state.get("last_run", {}).get(thread_id)
+if last_run and messages and messages[-1].type == "ai" and messages[-1].content:
+    score = st.feedback("thumbs", key=f"fb-{last_run}")
+    sent = st.session_state.setdefault("feedback_sent", set())
+    if score is not None and last_run not in sent:
+        try:
+            from langsmith import Client
+
+            Client().create_feedback(last_run, key="user_thumbs", score=score)
+            sent.add(last_run)
+            st.toast("Thanks, feedback saved to the trace.")
+        except Exception as e:  # tracing off or LangSmith down: never break the chat
+            st.toast(f"Couldn't save feedback: {e}")
+
 # ---------- human approval ----------
 draft = pending_approval(thread_id)
 if draft:
@@ -191,10 +206,11 @@ if draft:
     edited = st.text_area("Body, edit it before sending if you like", draft["body"], height=180)
     a, b = st.columns(2)
     if a.button(":material/send: Approve & send", type="primary", use_container_width=True):
-        agent.invoke(Command(resume={"approved": True, "edited_body": edited}), cfg)
+        agent.invoke(Command(resume={"approved": True, "edited_body": edited}),
+                     run_config(thread_id, "approval"))
         st.rerun()
     if b.button(":material/close: Reject", use_container_width=True):
-        agent.invoke(Command(resume={"approved": False}), cfg)
+        agent.invoke(Command(resume={"approved": False}), run_config(thread_id, "approval"))
         st.rerun()
     st.stop()
 
@@ -214,7 +230,9 @@ if prompt:
     with st.chat_message("assistant", avatar=":material/auto_awesome:"):
         chips, box = st.empty(), st.empty()
         acc, tools = "", []
-        for chunk, _meta in agent.stream({"messages": [("user", prompt)]}, cfg, stream_mode="messages"):
+        rcfg = run_config(thread_id)
+        st.session_state.setdefault("last_run", {})[thread_id] = str(rcfg["run_id"])
+        for chunk, _meta in agent.stream({"messages": [("user", prompt)]}, rcfg, stream_mode="messages"):
             if isinstance(chunk, ToolMessage):
                 tools.append(chunk.name)
                 chips.markdown(badges(tools))

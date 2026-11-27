@@ -67,12 +67,30 @@ def search_docs(query: str) -> str:
     hits = vs.similarity_search(query, k=4)
     if not hits:
         return "No relevant passages found."
-    return "\n\n".join(f"[page {d.metadata.get('page', '?')}] {d.page_content}" for d in hits)
+    passages = "\n\n".join(f"[page {d.metadata.get('page', '?')}] {d.page_content}" for d in hits)
+    # Marked as data so the model can tell document text from instructions (Phase 7).
+    return f"<untrusted_document>\n{passages}\n</untrusted_document>"
+
+
+
+def recipient_allowed(to: str) -> bool:
+    """EMAIL_ALLOWLIST: comma-separated addresses or domains (e.g. `me@x.com,example.com`).
+    Code-level backstop against prompt injection: even if the model is tricked, it can't
+    mail an address outside the list. Checked before the approval card is shown."""
+    allow = [a.strip().lower() for a in os.getenv("EMAIL_ALLOWLIST", "").split(",") if a.strip()]
+    # ponytail: empty list = allow all, fine while sending is simulated. When real Gmail
+    # lands (Phase 3b), default this to GMAIL_FROM.
+    if not allow:
+        return True
+    to = to.strip().lower()
+    return any(to == a or to.endswith("@" + a) for a in allow)
 
 
 @tool
 def send_email(to: str, subject: str, body: str) -> dict:
     """Send an email. ALWAYS requires human approval before sending."""
+    if not recipient_allowed(to):
+        return {"status": "blocked", "error": f"{to} is not on the EMAIL_ALLOWLIST; not sent."}
     decision = interrupt({"action": "send_email", "to": to, "subject": subject, "body": body})
     if decision.get("approved"):
         return {

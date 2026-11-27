@@ -42,10 +42,13 @@ jobs:
           uv sync --frozen
           uv run python 01_temperature.py
 
-      # --- Module 10: login/token logic, stdlib + dotenv only (skips the torch-heavy env)
-      - name: Module 10 — auth tests
+      # --- Module 10: login/token, trace redaction, metric maths. Light deps only (skips torch)
+      - name: Module 10 — auth, redaction, metrics tests
         working-directory: "Module 10 - Project - Build Your Own ChatGPT Agent"
-        run: uv run --no-project --with python-dotenv python test_auth.py
+        run: |
+          uv run --no-project --with python-dotenv python test_auth.py
+          uv run --no-project --with pydantic python test_redact.py
+          uv run --no-project --with python-dotenv python test_metrics.py
 
       # --- Hygiene: no key-shaped strings committed anywhere
       - name: Secret scan
