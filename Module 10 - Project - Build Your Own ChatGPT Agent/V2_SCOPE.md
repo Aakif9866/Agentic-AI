@@ -8,7 +8,7 @@
 > | 3a Login + token | ✅ |
 > | 3b Gmail + audit | ⏸ parked (needs Google OAuth client) · recipient allowlist already done |
 > | 5 Observability | ✅ tags, redaction, metrics.py, dashboard, 👍/👎, alert job · ✅ break-it test fired (after fixing a blind spot) · ⏳ LangSmith UI filters + online judge rule, Discord webhook |
-> | 6 Eval suite + CI | ✅ 40 cases + PR workflow · ⏳ baseline (Groq daily cap hit; rerun on a fresh day), GitHub secrets, a deliberately bad PR |
+> | 6 Eval suite + CI | ✅ 40 cases on DeepSeek V4.1-Flash, baseline 95% tools / 90% answers, bad prompt blocked locally (exit 1) · ⏳ GitHub secrets so it runs on real PRs |
 > | 7 Guardrails | ✅ 10/10 injection cases blocked, trace redaction verified |
 
 ## Goal in one line
@@ -122,7 +122,7 @@ React rewrite, voice, multi-agent supervisor, fine-tuning. Each looks impressive
 - [ ] Redeploy keeps all conversations (Phase 1)
 - [ ] A real email was sent and audited; a rejected one was audited too; no token → 401 (Phase 3)
 - [x] `metrics.py` output pasted into `NOTES.md` with real numbers; an alert was fired on purpose (Phase 5)
-- [ ] CI blocks a deliberately bad PR (Phase 6)
+- [~] CI blocks a deliberately bad PR (Phase 6): proven locally (72.5% < 90% floor → exit 1); needs GitHub secrets to run on a real PR
 - [x] Adversarial injection cases pass (Phase 7): 10/10
 - [ ] Every number in the resume section below is filled from a real run
 
@@ -160,11 +160,11 @@ Pick 4–5 bullets. Lead with observability and evals.
 - Cut median cost per conversation from **$[before]** to **$[after]** ([what you changed, e.g. switched the router model / trimmed context]), measured over **[N]** traced conversations.
 - Shipped **online evaluation**: an LLM-as-judge groundedness check on **20%** of production traces plus in-app 👍/👎 feedback logged to each trace; groundedness **[X]%**, thumbs-up rate **[Y]%** over **[N]** answers.
 - Set up alerting on tool error rate and p95 latency; verified by **injecting a failing API key**, alert fired within **[T]** minutes.
-- Built a **[30]-case offline eval suite** (tool-selection accuracy, faithfulness, cost) running in **GitHub Actions** on every PR; blocks merges on a >5-point accuracy regression. Baseline: **[X]%** tool accuracy, **[Y]%** faithfulness.
+- Built a **40-case offline eval suite** (tool-selection accuracy, LLM-as-judge faithfulness, cost) running in **GitHub Actions** on every PR; blocks merges on a >5-point accuracy regression. Baseline: **95%** tool accuracy, **90%** answer pass rate (LLM-as-judge) over 40 cases at **~$0.0014 per case**; a deliberately broken prompt dropped tool accuracy to 72.5% and was blocked.
 
 **Agent & product**
 - Took the agent from demo to product: **Gmail OAuth sending** gated by human approval, with a full **audit log** of every approve/reject/edit decision (**[N]** decisions logged, **[E]%** edited before sending).
-- Hardened against **prompt injection in retrieved content**: **[10/10]** adversarial cases blocked from triggering outbound actions; personal data redacted from traces.
+- Hardened against **prompt injection in retrieved content**: **10/10** adversarial cases blocked from triggering outbound actions; personal data redacted from traces.
 - Migrated state from SQLite to **Postgres (LangGraph PostgresSaver + pgvector)**, so conversations survive redeploys.
 
 ### Wording rules

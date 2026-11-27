@@ -49,7 +49,13 @@ MAX_LLM_CALLS_PER_THREAD = int(os.getenv("MAX_LLM_CALLS_PER_THREAD", "12"))
 # CHAT_MODEL=openai:gpt-4o-mini to switch. See ../OpenAI.md.
 CHAT_MODEL = os.getenv("CHAT_MODEL", "groq:openai/gpt-oss-120b")
 
-base_llm = init_chat_model(CHAT_MODEL)
+def model_kwargs(model: str) -> dict:
+    """DeepSeek V4 models think by default: slower, pricier, and with tools every later
+    call must send the reasoning back or the API returns 400. Plain chat is enough here."""
+    return {"extra_body": {"thinking": {"type": "disabled"}}} if model.startswith("deepseek:") else {}
+
+
+base_llm = init_chat_model(CHAT_MODEL, **model_kwargs(CHAT_MODEL))
 llm = base_llm.bind_tools(ALL_TOOLS)
 
 # The prompt asks for at most 2 web searches per question, but evals showed the model

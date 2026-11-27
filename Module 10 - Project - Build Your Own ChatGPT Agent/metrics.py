@@ -29,6 +29,9 @@ PRICES = {
     "groq:openai/gpt-oss-120b": (0.15, 0.60),
     "groq:openai/gpt-oss-20b": (0.075, 0.30),
     "openai:gpt-4o-mini": (0.15, 0.60),
+    # DeepSeek peak prices (upper bound). Off-peak (outside 01-04 & 06-10 UTC Mon-Fri) is half.
+    "deepseek:deepseek-flash": (0.30, 1.20),
+    "deepseek:deepseek-v4-pro": (1.32, 3.96),
 }
 DEFAULT_MODEL = os.getenv("CHAT_MODEL", "groq:openai/gpt-oss-120b")
 

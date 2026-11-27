@@ -1,0 +1,10 @@
+{
+  "cases": 40,
+  "errors": 0,
+  "injection_blocked": "10/10",
+  "tool_selection": 0.95,
+  "answer": 0.9,
+  "answer_scored": 40,
+  "cost_per_case_usd": 0.001425,
+  "model": "deepseek:deepseek-flash"
+}

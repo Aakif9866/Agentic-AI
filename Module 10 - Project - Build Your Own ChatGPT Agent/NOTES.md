@@ -233,3 +233,27 @@ counts returned errors (`{'error': ...}` / `error: ...`), not guardrail blocks. 
 Module 10 agent alert (last hour): tool error rate 100% ({'tavily_search': '0/3'})
 DISCORD_WEBHOOK_URL not set; alert printed only
 ```
+
+### v2 evidence, session 3 (2026-11-27): evals moved to DeepSeek, baseline + gate proven
+
+Groq's free 200K tokens/day cap broke every full run, so evals (agent + judge) now run on **DeepSeek V4.1-Flash**
+(`deepseek:deepseek-flash`, thinking disabled: cheaper, and thinking + tools needs reasoning passed back or the API 400s).
+The deployed app still defaults to free Groq; `CHAT_MODEL` switches it.
+Pricing (api-docs.deepseek.com, read 2026-11-27): $0.30 in / $1.20 out per 1M at peak, half off-peak.
+
+**Baseline** (experiment `ds-baseline-9ab82888`), committed as `evals/baseline.json`:
+```
+SUMMARY {"cases": 40, "errors": 0, "injection_blocked": "10/10", "tool_selection": 0.95, "answer": 0.9,
+         "cost_per_case_usd": 0.001425, "model": "deepseek:deepseek-flash"}
+```
+Remaining misses: web02/web03 answers judged unsupported, web04 answered weather with no search, mix01 searched 3x but got the chapter count wrong.
+
+**Gate proof.** System prompt replaced with "Answer from your own knowledge; tools are slow, avoid them." (experiment `ds-bad-prompt`):
+```
+SUMMARY {... "tool_selection": 0.725, "answer": 0.85 ...}
+FAIL: tool accuracy 72.5% < baseline 95.0% - 5% = 90.0%        exit code: 1
+```
+backend.py restored byte-for-byte (cmp) afterwards.
+
+**Spend.** DeepSeek balance $1.56 → $1.55 for two full 40-case runs + a 3-case smoke test (off-peak + prompt-cache hits;
+the $0.0014/case figure uses peak prices, so it is an upper bound).

@@ -42,7 +42,7 @@ from langsmith import Client, evaluate  # noqa: E402
 from pydantic import BaseModel  # noqa: E402
 
 import tools  # noqa: E402
-from backend import CHAT_MODEL, agent  # noqa: E402
+from backend import CHAT_MODEL, agent, model_kwargs  # noqa: E402
 from metrics import cost_usd  # noqa: E402
 
 DATASET = HERE / "dataset.jsonl"
@@ -74,8 +74,10 @@ class Verdict(BaseModel):
 
 # A different model from the agent on purpose: Groq rate limits are per model, so the
 # judge gets its own token quota instead of 429-ing against the agent's.
+# JUDGE_MODEL=deepseek:deepseek-flash avoids Groq's free-tier daily cap (costs ~cents/run).
+JUDGE_MODEL = os.getenv("JUDGE_MODEL", "groq:openai/gpt-oss-20b")
 _judge = init_chat_model(
-    "groq:openai/gpt-oss-20b", temperature=0, timeout=60, max_retries=2
+    JUDGE_MODEL, temperature=0, timeout=60, max_retries=2, **model_kwargs(JUDGE_MODEL)
 ).with_structured_output(Verdict, method="json_mode")  # Groq: json_mode + shape hint
 
 
@@ -210,7 +212,7 @@ def main() -> int:
         data=examples,
         evaluators=[tool_selection, answer, cost],
         experiment_prefix=args.prefix,
-        metadata={"model": CHAT_MODEL, "git_sha": os.getenv("GITHUB_SHA", "local")},
+        metadata={"model": CHAT_MODEL, "judge": JUDGE_MODEL, "git_sha": os.getenv("GITHUB_SHA", "local")},
         max_concurrency=1,  # free-tier rate limits
     )
 

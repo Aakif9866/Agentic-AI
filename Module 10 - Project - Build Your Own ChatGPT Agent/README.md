@@ -75,7 +75,7 @@ An empty `/chat` stream means "check `/pending`" — that is the client's cue, n
 | What | Command / where | File |
 |---|---|---|
 | Eval suite (40 cases, LangSmith experiment) | `uv run python evals/run_evals.py` (`--quick 8`, `--only injection`, `--update-baseline`) | [evals/run_evals.py](evals/run_evals.py) |
-| CI gate on every PR (fails on >5pt tool-accuracy drop) | needs repo secrets `GROQ_API_KEY`, `TAVILY_API_KEY`, `LANGSMITH_API_KEY` | `../.github/workflows/module10-evals.yml` |
+| CI gate on every PR (fails on >5pt tool-accuracy drop) | runs on DeepSeek V4.1-Flash (~$0.01–0.06 per run); needs repo secrets `DEEPSEEK_API_KEY`, `TAVILY_API_KEY`, `LANGSMITH_API_KEY`. Locally: `CHAT_MODEL=deepseek:deepseek-flash JUDGE_MODEL=deepseek:deepseek-flash uv run python evals/run_evals.py` | `../.github/workflows/module10-evals.yml` |
 | Metrics from traces | `uv run python metrics.py` (`--days 1`, `--alert`) | [metrics.py](metrics.py) |
 | Dashboard | sidebar → **dashboard** (login required) | [pages/dashboard.py](pages/dashboard.py) |
 | Hourly alert → Discord | secret `DISCORD_WEBHOOK_URL` (optional) | `../.github/workflows/module10-alert.yml` |
