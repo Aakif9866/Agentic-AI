@@ -70,6 +70,19 @@ curl -X POST localhost:8000/approve -H 'Content-Type: application/json' \
 
 An empty `/chat` stream means "check `/pending`" — that is the client's cue, not a bug.
 
+## v2: evals, observability, guardrails
+
+| What | Command / where | File |
+|---|---|---|
+| Eval suite (40 cases, LangSmith experiment) | `uv run python evals/run_evals.py` (`--quick 8`, `--only injection`, `--update-baseline`) | [evals/run_evals.py](evals/run_evals.py) |
+| CI gate on every PR (fails on >5pt tool-accuracy drop) | needs repo secrets `GROQ_API_KEY`, `TAVILY_API_KEY`, `LANGSMITH_API_KEY` | `../.github/workflows/module10-evals.yml` |
+| Metrics from traces | `uv run python metrics.py` (`--days 1`, `--alert`) | [metrics.py](metrics.py) |
+| Dashboard | sidebar → **dashboard** (login required) | [pages/dashboard.py](pages/dashboard.py) |
+| Hourly alert → Discord | secret `DISCORD_WEBHOOK_URL` (optional) | `../.github/workflows/module10-alert.yml` |
+| Trace tags + PII redaction | every agent call uses `run_config()` | [backend.py](backend.py), [redact.py](redact.py) |
+| Recipient allowlist | `EMAIL_ALLOWLIST=me@x.com,example.com` (empty = allow all while sending is simulated) | [tools.py](tools.py) |
+| Light tests (no keys) | `uv run python test_auth.py`, then `test_redact.py`, `test_metrics.py` | `test_*.py` |
+
 ## Deploying
 
 Render: New → Web Service → connect repo → it detects the `Dockerfile` (which serves the Streamlit app; set the health check path to `/_stcore/health`). Set `GROQ_API_KEY` and `TAVILY_API_KEY` as environment variables in the dashboard, never in the image.

@@ -213,6 +213,18 @@ Added **Module 0 — Python Core Basics (Recap)**: one notebook covering only wh
 
 Module 2's `async.ipynb`/`pydantic.ipynb` were rebuilt in place (same concepts, more varied examples instead of "patient" repeated through every Pydantic feature) and re-executed clean. `NOTES.md` for Module 2 was left as-is — it was already accurate.
 
+## 6g. Module 10 v2 in progress (2026-11-27) — resume here
+
+Plan: `Module 10/V2_PLAN.md`. Status table: top of `Module 10/V2_SCOPE.md`. Evidence: `Module 10/NOTES.md` → "v2 evidence".
+Single-user app on purpose (Phases 2 + 4 dropped).
+
+- **Done + committed:** Phase 1 (PostgresSaver on Neon via `DATABASE_URL`, SQLite fallback), 3a (env-var login + stdlib HMAC token, `/threads` deleted), 5 (`run_config()` tags every run, `metrics.py`, `pages/dashboard.py`, 👍/👎 feedback, hourly alert workflow), 6 (40-case eval suite as LangSmith experiments, PR gate), 7 (10/10 injection blocked, trace redaction, `EMAIL_ALLOWLIST`).
+- **Parked:** 3b real Gmail. Google Cloud OAuth client couldn't be created.
+- **Next session, no setup needed:** (1) on a fresh Groq day, `uv run python evals/run_evals.py --update-baseline` and commit `evals/baseline.json`; (2) break-it alert test with a bad `TAVILY_API_KEY`; (3) prove the gate locally by breaking `SYSTEM`; (4) fix eval findings (web search looping, docs questions answered with no tool, greeting says "sends email directly"); (5) 20b vs 120b experiment for a cost number; (6) build the Docker image locally before the Render redeploy.
+- **Needs the user:** Render env vars (`DATABASE_URL`, `APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET`) then a redeploy; GitHub secrets `GROQ_API_KEY`, `TAVILY_API_KEY`, `LANGSMITH_API_KEY`; optional `DISCORD_WEBHOOK_URL`.
+- **Rediscovered §6e's 200K tokens/day Groq cap:** a 40-case run after a day of testing died at ~case 15 and produced a fake 57.5% baseline. `run_evals.py` now refuses to gate or write a baseline if any case errored. Run the full suite **first thing** on a fresh day, never after other testing.
+- Redaction pitfall: LangGraph `chain` spans carry message *objects*, so a dict/str-only redactor leaks. Check every span, not just the root.
+
 ## 7. Working agreements that held up
 
 - **One module per session.** Build → run → fix → `NOTES.md` → commit → push. Never two in flight.

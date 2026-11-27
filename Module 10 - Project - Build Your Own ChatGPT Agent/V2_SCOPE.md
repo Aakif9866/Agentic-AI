@@ -1,6 +1,15 @@
 # Module 10 v2 — Klyro Assistant
 
-> **Not built yet.** This is the build plan for turning the Module 10 agent into a portfolio-grade product. Paste `../AGENT_RULES.md` + this file to Claude Code when you're ready. Build **one phase per session**, commit each separately, and don't call a phase done until it has actually run.
+> **Status (2026-11-27):** Phases 1, 3a, 5, 6 and 7 are built and verified locally. Phase 3b (real Gmail) is parked because the Google Cloud credentials aren't set up. Step-by-step plan: [V2_PLAN.md](V2_PLAN.md). Evidence: [NOTES.md](NOTES.md) → "v2 evidence". Build **one phase per session**, commit each separately, and don't call a phase done until it has actually run.
+>
+> | Phase | State |
+> |---|---|
+> | 1 Postgres | ✅ local on Neon · ⏳ Render redeploy check |
+> | 3a Login + token | ✅ |
+> | 3b Gmail + audit | ⏸ parked (needs Google OAuth client) · recipient allowlist already done |
+> | 5 Observability | ✅ tags, redaction, metrics.py, dashboard, 👍/👎, alert job · ⏳ LangSmith UI filters + online judge rule, Discord webhook, break-it test on Render |
+> | 6 Eval suite + CI | ✅ 40 cases + PR workflow · ⏳ baseline (Groq daily cap hit; rerun on a fresh day), GitHub secrets, a deliberately bad PR |
+> | 7 Guardrails | ✅ 10/10 injection cases blocked, trace redaction verified |
 
 ## Goal in one line
 
@@ -114,7 +123,7 @@ React rewrite, voice, multi-agent supervisor, fine-tuning. Each looks impressive
 - [ ] A real email was sent and audited; a rejected one was audited too; no token → 401 (Phase 3)
 - [ ] `metrics.py` output pasted into `NOTES.md` with real numbers; an alert was fired on purpose (Phase 5)
 - [ ] CI blocks a deliberately bad PR (Phase 6)
-- [ ] Adversarial injection cases pass (Phase 7)
+- [x] Adversarial injection cases pass (Phase 7): 10/10
 - [ ] Every number in the resume section below is filled from a real run
 
 ## Pitfalls specific to v2
