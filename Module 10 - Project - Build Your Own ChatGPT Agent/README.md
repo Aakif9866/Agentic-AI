@@ -2,6 +2,8 @@
 
 Everything from Modules 6–9 in one agent: memory, streaming, threads, tools, RAG, and human approval. The app is a Streamlit UI (Klyro "Spectrum" theme); a FastAPI service exposes the same agent as JSON.
 
+**Live: https://agentic-chat-sepia.vercel.app** (sign-in required). **v2** added a login, Postgres persistence, tracing with PII redaction, metrics and alerts, a 40-case eval gate and prompt-injection defences. What changed and why: [CHANGELOG.md](CHANGELOG.md). Beginner walkthrough: [HOW_IT_WORKS.md](HOW_IT_WORKS.md). Design: [ARCHITECTURE.md](ARCHITECTURE.md).
+
 ## Run it
 
 ```bash
@@ -10,6 +12,7 @@ uv run python ingest.py sample_notes.pdf      # fills faiss_db/ for the search_d
 uv run streamlit run ui_streamlit.py          # the app, on :8501 (this is what Docker serves)
 uv run uvicorn api:app --reload               # optional JSON API on :8000
 uv run python test_rate_limit.py              # limiter self-check
+uv run python test_auth.py                    # login/token checks (also test_redact.py, test_metrics.py)
 ```
 
 Needs `GROQ_API_KEY` and `TAVILY_API_KEY` in `.env`, plus `APP_USERNAME`, `APP_PASSWORD` and `APP_SECRET` to log in. `DATABASE_URL` (Neon) is optional locally; without it chats go to `chatbot.db`.
@@ -22,7 +25,10 @@ Needs `GROQ_API_KEY` and `TAVILY_API_KEY` in `.env`, plus `APP_USERNAME`, `APP_P
 | Web search | Tavily | `TAVILY_API_KEY` |
 | PDF search | FAISS + `all-MiniLM-L6-v2`, runs locally, no API | `EMBED_MODEL` |
 | Memory | LangGraph `PostgresSaver` on Neon when `DATABASE_URL` is set, else `SqliteSaver` → `chatbot.db` | `DATABASE_URL`, `CHECKPOINT_DB` |
-| Tracing | LangSmith (optional) | `LANGSMITH_*` |
+| Login | one username/password, HMAC-signed API tokens ([auth.py](auth.py)) | `APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET` |
+| Tracing | LangSmith (optional), PII-redacted, tagged per run | `LANGSMITH_*`, `APP_VERSION` |
+| Evals | DeepSeek V4.1-Flash for agent + judge (cheap, no daily cap) | `CHAT_MODEL`, `JUDGE_MODEL`, `DEEPSEEK_API_KEY` |
+| Hosting | Vercel container ([Dockerfile.vercel](Dockerfile.vercel)) | Vercel project env vars |
 
 ## Abuse limits
 
@@ -30,6 +36,8 @@ Needs `GROQ_API_KEY` and `TAVILY_API_KEY` in `.env`, plus `APP_USERNAME`, `APP_P
 |---|---|---|
 | Questions per visitor (IP) per rolling hour | 15 | `RATE_LIMIT_PER_HOUR` (0 closes the app) |
 | Model calls per conversation | 12 | `MAX_LLM_CALLS_PER_THREAD` |
+| Web searches per question (enforced in code) | 2 | `MAX_SEARCHES_PER_TURN` |
+| Email recipients | anyone (sending is simulated) | `EMAIL_ALLOWLIST` (addresses or domains) |
 | Message length | 2000 chars | — |
 
 The hourly limit lives in memory, so it resets on redeploy, and it only applies in the Streamlit app (not the JSON API). **Login (v2 Phase 3):** the app and the API sit behind one username/password from env vars (`APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET`; see [auth.py](auth.py)). If any is unset, nobody can log in. After login the sidebar lists every chat; the thread id lives in the URL (`?t=...`), so a refresh keeps the conversation.
@@ -42,14 +50,15 @@ The hourly limit lives in memory, so it resets on redeploy, and it only applies 
 | POST | `/chat` | Streams the reply token by token. Body: `{thread_id, message}` |
 | GET | `/pending/{thread_id}` | The draft awaiting human approval, or `null` |
 | POST | `/approve` | Resumes a paused thread. Body: `{thread_id, approved, edited_body?}` |
-| GET | `/health` | `{"ok": true}` — what Render and CI poll |
+| DELETE | `/threads/{thread_id}` | Deletes a conversation and all its checkpoints |
+| GET | `/health` | `{"ok": true}` — no token needed; what hosts and CI poll |
 
 ## Tools the agent can call
 
 - `calculator` — arithmetic, whitelisted expression (no bare `eval`)
 - `tavily_search` — live web search
-- `search_docs` — FAISS search over the ingested PDF, cites page numbers
-- `send_email` — **pauses for human approval**, and the human can edit the body first
+- `search_docs` — FAISS search over the ingested PDF, cites page numbers; output is wrapped in `<untrusted_document>` tags
+- `send_email` — **pauses for human approval**, and the human can edit the body first. Sending is still **simulated** (real Gmail is v2 Phase 3b, parked); `EMAIL_ALLOWLIST` is checked before the approval card
 
 ## The one flow worth understanding
 
@@ -91,7 +100,7 @@ An empty `/chat` stream means "check `/pending`" — that is the client's cue, n
 npx vercel@67.0.0 link --yes --project agentic-chat
 npx vercel@67.0.0 project update --framework container --yes   # else Vercel builds nothing and serves 404
 printf '%s' "$VALUE" | npx vercel@67.0.0 env add NAME production  # once per env var below
-npx vercel@67.0.0 deploy --prod --yes
+npx vercel@67.0.0 deploy --prod --yes -e APP_VERSION=$(git rev-parse --short HEAD)   # tags traces with the commit
 ```
 
 Vercel builds [Dockerfile.vercel](Dockerfile.vercel) (same image as `Dockerfile`, port 80); [.vercelignore](.vercelignore) keeps `.env` and the 1.3 GB `.venv` out of the upload. Hobby limits to know: a connection lasts at most 5 minutes and idle containers scale to zero after 5 minutes, so expect a cold start (~torch + model load) and an occasional reconnect. Chats survive both (Neon + `?t=` in the URL).

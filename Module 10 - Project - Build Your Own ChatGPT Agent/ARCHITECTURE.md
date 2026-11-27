@@ -9,10 +9,14 @@ The capstone combining Modules 6–9. This document covers components, data flow
 | File | Responsibility | Must NOT |
 |---|---|---|
 | `tools.py` | Everything the agent can *do*: arithmetic, web search, PDF retrieval, email-with-approval. Owns the embedding model and vector store path. | know anything about HTTP or the graph |
-| `backend.py` | The graph: nodes, edges, the system prompt, the checkpointer, the budget cap. Exposes `agent`, `all_thread_ids()`, `pending_approval()`. | import FastAPI |
-| `api.py` | HTTP transport only: request/response shapes, streaming, endpoint routing. | contain agent logic |
+| `backend.py` | The graph: nodes, edges, the system prompt, the checkpointer (Postgres or SQLite), the budget and search caps, `run_config()` for traced runs. Exposes `agent`, `checkpointer`, `run_config()`, `all_thread_ids()`, `thread_title()`, `pending_approval()`. | import FastAPI |
+| `api.py` | HTTP transport only: request/response shapes, streaming, endpoint routing, the Bearer-token check. | contain agent logic |
 | `ingest.py` | One-off: PDF → FAISS index. | run at request time |
-| `ui_streamlit.py` | The public app (what Docker serves). Talks to the graph **directly**, not via HTTP; owns the per-visitor rate limit UI. | be required for the API to work |
+| `ui_streamlit.py` | The public app (what Docker serves). Talks to the graph **directly**, not via HTTP; owns the login gate, the rate limit UI, 👍/👎 feedback and chat deletion. | be required for the API to work |
+| `auth.py` (v2) | The single login and stateless HMAC tokens. Stdlib only. | store sessions server-side |
+| `redact.py` (v2) | Scrubs emails/phones from anything sent to LangSmith. Stdlib only. | change what the agent itself sees |
+| `metrics.py` + `pages/dashboard.py` (v2) | Metrics and alert rules computed from LangSmith runs tagged `module10`. Light imports (no torch). | import `backend` |
+| `evals/` (v2) | 40-case offline suite + PR gate, run as LangSmith experiments; builds its own poisoned index in a temp dir. | touch the real chat DB (forces in-memory SQLite) |
 
 **The load-bearing decision:** `backend.py` imports no web framework. That's why Module 15's eval harness and Module 16's test suite can `from backend import agent` without starting a server.
 
@@ -145,7 +149,9 @@ Threads are isolated by `thread_id`; two threads never see each other's state.
 
 | Service | Used by | Failure mode | Handling |
 |---|---|---|---|
-| **Groq** | `backend.py` | dead model → 404; rate limit → 429 | **not handled** — propagates as a 500. See §9. |
+| **Groq** | `backend.py` | dead model → 404; rate limit → 429; invalid tool args → 400 `tool_use_failed` | 400 `tool_use_failed`: error fed back, one retry, then a polite reply (v2). Others **not handled**: propagate as a 500. See §9. |
+| **DeepSeek** (evals) | `evals/run_evals.py` | thinking mode + tools needs reasoning passed back, or 400 | thinking disabled via `backend.model_kwargs()` |
+| **LangSmith** | `run_config()`, `metrics.py`, feedback | down / no key | tracing off unless `LANGSMITH_TRACING=true`; feedback errors become a toast, never break the chat |
 | **Tavily** | `tools.py:web_search` | missing key at *construction* time | `load_dotenv()` lives in `tools.py` because the key is read at import |
 | **HuggingFace** | `tools.py:EMBEDDINGS` | ~90MB download on first use | Dockerfile pre-bakes it so cold containers don't pay it |
 | **FAISS** (local) | `search_docs` | index absent | returns `"No document has been uploaded yet."` as text |
@@ -165,6 +171,9 @@ The governing rule, from Module 7: **tools return errors as strings; they never 
 | No relevant chunks | `"No relevant passages found."` |
 | Budget exhausted | polite `AIMessage`, **no model call spent** |
 | Runaway tool loop | `recursion_limit=25`, plus the budget cap bounds it |
+| Too many web searches | after `MAX_SEARCHES_PER_TURN` (2), the model answers from a flattened, tool-free prompt (v2) |
+| Model invents a tool argument | Groq 400 `tool_use_failed` → error fed back, one retry, then a polite message (v2) |
+| Tool *returns* an error | the model reads it; `metrics.tool_failed()` counts it as a failure (v2) |
 | Groq unavailable | ⚠️ unhandled — 500 to the client |
 
 ---
@@ -189,9 +198,12 @@ graph LR
 | **Irreversible actions** | `send_email` requires `interrupt()` approval; the human may edit the body first |
 | **Secrets** | `.env` only; gitignored; excluded via `.dockerignore`; never baked into the image |
 | **Deserialization** | `allow_dangerous_deserialization=True` is required by FAISS — acceptable only because *we* built the index. Never load a downloaded one. |
-| **Spend** | `MAX_LLM_CALLS_PER_THREAD`, checked before the call |
+| **Spend** | `MAX_LLM_CALLS_PER_THREAD`, checked before the call; `MAX_SEARCHES_PER_TURN` |
+| **Access** (v2) | one login from env vars, fails closed; API needs a 24 h HMAC Bearer token; `GET /threads` removed |
+| **Prompt injection** (v2) | system rule: tool output and pasted text are data; `search_docs` output wrapped in `<untrusted_document>`; `EMAIL_ALLOWLIST` checked in code before approval. 10/10 eval cases blocked |
+| **Trace privacy** (v2) | `redact()` on every span's inputs/outputs, including LangChain message objects |
 
-**Known gap:** `tavily_search` and `search_docs` run ungated. Only the one irreversible action is gated. That's a deliberate line, recorded in Module 15's audit (row 5) rather than enforced in code.
+**Known gap:** `tavily_search` and `search_docs` run ungated (by design: they're read-only). Only the one irreversible action is gated. That's a deliberate line, recorded in Module 15's audit (row 5) rather than enforced in code.
 
 ---
 
@@ -210,13 +222,13 @@ graph LR
 
 ### Accepted limitations
 
-1. **No verification of answers** — nothing grades output. Module 16 addresses this for Module 14; Module 10 is still unguarded.
-2. **No context trimming** — history grows forever; Module 7's `trim_messages` exists but isn't wired in.
-3. **No thread deletion** — no way to honour "delete my data".
-4. **No local observability** — no logging, token counts or latency. LangSmith is opt-in and off by default.
-5. **SQLite on free hosts is ephemeral.**
+1. ~~**No verification of answers**~~ — **fixed in v2:** 40-case eval suite with LLM-as-judge, gating PRs (`evals/`).
+2. **No context trimming** — history grows forever; Module 7's `trim_messages` exists but isn't wired in. The 12-call budget is the only bound. *Still open.*
+3. ~~**No thread deletion**~~ — **fixed in v2:** sidebar button + `DELETE /threads/{id}`.
+4. ~~**No local observability**~~ — **fixed in v2:** tagged, redacted traces; `metrics.py` (latency, tokens, cost, tool success); dashboard; hourly alert. Still needs LangSmith enabled.
+5. ~~**SQLite on free hosts is ephemeral.**~~ — **fixed in v2:** `PostgresSaver` on Neon.
 
-All five are recorded with `file:line` evidence in [`../Module 15 - Harness & Loop Engineering/HARNESS_REVIEW.md`](../Module%2015%20-%20Harness%20&%20Loop%20Engineering/HARNESS_REVIEW.md).
+All five were originally recorded with `file:line` evidence in [`../Module 15 - Harness & Loop Engineering/HARNESS_REVIEW.md`](../Module%2015%20-%20Harness%20&%20Loop%20Engineering/HARNESS_REVIEW.md).
 
 ---
 
@@ -237,7 +249,9 @@ Required: `GROQ_API_KEY`, `TAVILY_API_KEY`, and for login `APP_USERNAME`, `APP_P
 
 **Verified in v2** (2026-11-27, see NOTES.md): Postgres persistence across processes; login/token 401s; `/threads` removed and `DELETE /threads/{id}` added; trace redaction span by span; 40-case eval baseline and gate failure on a broken prompt; alert firing on a broken Tavily key; Streamlit UI driven through login, chat, feedback, delete and dashboard with AppTest.
 
-**Not verified:** the v2 image on Render (v1's image built and ran there, health green); real Gmail sending (Phase 3b). The UI has been driven programmatically (Streamlit AppTest), not clicked through by hand on the live URL.
+**Verified on Vercel:** health 200, WebSocket upgrade 101, and a Streamlit-protocol probe rendering the Sign-in form with no exceptions (https://agentic-chat-sepia.vercel.app).
+
+**Not verified:** real Gmail sending (Phase 3b); a chat surviving a Vercel redeploy (Postgres persistence itself is verified locally). The UI has been driven programmatically (Streamlit AppTest), not clicked through by hand on the live URL.
 
 ## 11. Troubleshooting
 
@@ -248,5 +262,9 @@ Required: `GROQ_API_KEY`, `TAVILY_API_KEY`, and for login `APP_USERNAME`, `APP_P
 | `"...reached its budget..."` | thread hit the cap | new `thread_id`, or raise `MAX_LLM_CALLS_PER_THREAD` |
 | `Did not find tavily_api_key` | key read at import | set `TAVILY_API_KEY`; `tools.py` loads its own env |
 | `model ... decommissioned` | Groq retired it | check the live list — `AGENT_RULES.md` #1 |
-| Threads vanished after deploy | free-tier disk wipe | `PostgresSaver` |
+| Threads vanished after deploy | free-tier disk wipe | set `DATABASE_URL` (`PostgresSaver`) |
+| Sign-in always says "Wrong username or password" | `APP_USERNAME`/`APP_PASSWORD`/`APP_SECRET` unset on the host | add all three to the host's env vars (fails closed by design) |
+| Vercel deploy "succeeds" in ~100 ms, site 404s | project not on the Container preset | `vercel project update --framework container --yes`, redeploy |
+| Groq 400 `Tool choice is none, but model called a tool` | calling the model without tools while tool history/names are visible | flattened, tool-free prompt (`answer_from_results`) |
+| Eval run exits 2 | a case errored (often Groq's 200K tokens/day cap) | rerun later, or use `CHAT_MODEL`/`JUDGE_MODEL=deepseek:deepseek-flash` |
 | Dimension mismatch after switching embeddings | 384 vs 1536 | `rm -rf faiss_db && uv run python ingest.py ...` |

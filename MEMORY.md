@@ -18,7 +18,7 @@
 | **7 Observability & Tools** | ✅ verified | 4 files + `NOTES.md` |
 | **8 RAG & HITL** | ✅ verified | 5 files + `rag_shared.py` + `sample_notes.pdf` + `NOTES.md` |
 | **9 Deployment** | ✅ verified | `backend.py`, `api.py`, Dockerfile (**image built + run**), CI yml, `NOTES.md` |
-| **10 Capstone** | ✅ verified | `tools.py`, `backend.py`, `api.py`, `ingest.py`, `ui_streamlit.py`, `budget_demo.py`, `README.md`, **`ARCHITECTURE.md`**, `NOTES.md` |
+| **10 Capstone** | ✅ verified · **v2 live** on Vercel (https://agentic-chat-sepia.vercel.app) | `tools.py`, `backend.py`, `api.py`, `ingest.py`, `ui_streamlit.py`, `budget_demo.py`, v2: `auth.py`, `redact.py`, `metrics.py`, `pages/dashboard.py`, `evals/`, `Dockerfile.vercel`; docs: `README.md`, **`ARCHITECTURE.md`**, `HOW_IT_WORKS.md`, `CHANGELOG.md`, `V2_SCOPE.md`, `V2_PLAN.md`, `NOTES.md` |
 | **11 TripMate** | ✅ verified | `main.py` + `NOTES.md` |
 | **12 MCP** | ✅ verified | `notes_server.py`, `client.py`, `README_MCP.md`, `NOTES.md` |
 | **13 Subgraphs** | ✅ verified | `research_subgraph.py`, `main.py`, `NOTES.md` |

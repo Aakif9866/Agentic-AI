@@ -151,6 +151,12 @@ Topics:
 - HITL over HTTP: `/chat` returns an empty stream when paused, `/pending/{id}` + `/approve` (`Command(resume=...)`) to continue
 - Streamlit UI talking directly to the graph object (not via HTTP) for simplicity
 - Known limitations: SQLite non-persistence on free hosts, no thread deletion, embedding-model cold-start download
+- **v2 additions** (see `CHANGELOG.md`): Postgres checkpointer on Neon (`PostgresSaver`), single-user login with HMAC-signed API tokens, thread deletion
+- Observability: per-run tags/metadata via a `run_config()` helper, PII redaction with a custom LangSmith client (`hide_inputs`/`hide_outputs`), metrics computed from traces, alert rules, user feedback on traces
+- Offline evals as LangSmith experiments: tool-selection accuracy, LLM-as-judge faithfulness, cost per case, a baseline file and a CI regression gate
+- Prompt-injection defence in depth: untrusted-data system rule, delimiting retrieved text, a code-level recipient allowlist, adversarial eval cases
+- Enforcing limits in code rather than the prompt (search cap), and recovering from provider-side tool-call validation errors
+- Container deploy to Vercel from the terminal
 
 Prerequisites (from NOTES.md content): Modules 6-9 — explicitly a capstone of memory/streaming/threads (6), tools (7), RAG/HITL (8), and the deploy shape (9).
 

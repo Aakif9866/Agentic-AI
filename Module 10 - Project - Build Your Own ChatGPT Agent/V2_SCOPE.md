@@ -36,7 +36,7 @@ The lesson of v2 is **not** "add features." It's that a feature you can't measur
 - The LangGraph agent loop + `interrupt()` approval flow ([backend.py](backend.py), [tools.py](tools.py))
 - Per-thread budget cap (`MAX_LLM_CALLS_PER_THREAD`, default 12) and per-visitor rate limit (`RATE_LIMIT_PER_HOUR`, default 15)
 - Provider-as-config via `CHAT_MODEL` (`init_chat_model`)
-- LangSmith tracing, Dockerfile, Render deployment
+- LangSmith tracing, Dockerfile, a public deployment (v1 on Render; v2 moved to a Vercel container)
 
 ---
 
@@ -44,8 +44,8 @@ The lesson of v2 is **not** "add features." It's that a feature you can't measur
 
 ### Phase 1 — Persistent storage (Postgres)
 - Replace `SqliteSaver` with LangGraph's `PostgresSaver` (Neon free tier).
-- Replace FAISS with **pgvector** in the same database. One database, one connection string.
-- **Done when:** you redeploy on Render and an old conversation is still there.
+- ~~Replace FAISS with **pgvector**~~ — **decided against:** the PDF is fixed (Phase 4 dropped) and its FAISS index is rebuilt inside the image, so it already survives redeploys.
+- **Done when:** you redeploy (Vercel) and an old conversation is still there.
 
 ### ~~Phase 2 — Accounts & isolation~~ (dropped: single-user app)
 ### ~~Phase 4 — Bring-your-own documents~~ (dropped: single-user app)
@@ -53,12 +53,12 @@ The lesson of v2 is **not** "add features." It's that a feature you can't measur
 The app has one real user (me), so multi-user auth and per-user documents are out. Phase numbers are kept so the rest of this file still lines up.
 
 ### Phase 3 — Real email (Gmail OAuth, my account only)
-- **Lock the public URL first.** Without accounts, anyone who opens the Render link could chat, approve, and send email from my Gmail. So:
-  - **One fixed login.** `APP_USERNAME`, `APP_PASSWORD` and `APP_SECRET` (a long random string used to sign tokens) are set as Render env vars and in local `.env`. They're fixed values, but they never go in the code or the repo: the repo is public, so a password written in the code is a leaked password.
+- **Lock the public URL first.** Without accounts, anyone who opens the public link could chat, approve, and send email from my Gmail. So:
+  - **One fixed login.** `APP_USERNAME`, `APP_PASSWORD` and `APP_SECRET` (a long random string used to sign tokens) are set as the host's env vars (Vercel project env) and in local `.env`. They're fixed values, but they never go in the code or the repo: the repo is public, so a password written in the code is a leaked password.
   - **Streamlit** ([ui_streamlit.py](ui_streamlit.py)): show a username + password form before anything else. On a match, set `st.session_state["logged_in"] = True`. The UI calls `backend` directly, so it needs no token.
   - **API** ([api.py](api.py)): add `POST /login`. It checks the username and password (`hmac.compare_digest`, so the check doesn't leak timing) and returns a **token**: `"<expiry>.<signature>"`, where the signature is an HMAC-SHA256 of the expiry using `APP_SECRET` (stdlib only, valid 24 h). Every other route except `/health` requires `Authorization: Bearer <token>`. Missing, bad or expired token → 401.
   - Delete the global `GET /threads` (it lists every thread to anyone).
-- Connect my Gmail once (OAuth, `gmail.send` scope only). Store the refresh token as a Render secret, never in the repo.
+- Connect my Gmail once (OAuth, `gmail.send` scope only). Store the refresh token as a host env var (Vercel), never in the repo.
 - The `interrupt()` approval stays exactly as it is; only the body after `if decision.get("approved"):` changes.
 - Every decision writes an **audit row**: `thread_id, to, subject, approved, edited, sent_at, gmail_message_id`.
 - Guard: recipient allowlist (default: only my own address) until I turn it off.
@@ -128,7 +128,7 @@ React rewrite, voice, multi-agent supervisor, fine-tuning. Each looks impressive
 
 ## Pitfalls specific to v2
 
-- **OAuth on Render:** the redirect URI must exactly match the public URL, including `https://` and no trailing slash.
+- **Gmail OAuth:** run the consent flow once locally (`InstalledAppFlow` on localhost), so the host needs no redirect URI. Set the Google OAuth app to *In production*; in *Testing* status refresh tokens expire after 7 days.
 - **Gmail scopes:** request `gmail.send` only. Broader scopes trigger Google's verification review.
 - **LLM-as-judge cost:** sample production runs (20%), don't judge all of them. Keep the CI suite at ~30 cases.
 - **Faithfulness judge on Groq:** needs `method="json_mode"` + a shape hint for structured verdicts (see `../AGENT_RULES.md` #2).
@@ -147,25 +147,25 @@ Every bullet below has a `[blank]`. You fill it from a real run, and keep the ev
 - Built a tool-using conversational agent in **LangGraph** (calculator, Tavily web search, RAG over PDFs, email drafting) with **human-in-the-loop approval** via `interrupt()` before any outbound action.
 - Persisted multi-thread conversation state with a checkpointer, so paused approvals survive restarts.
 - Added cost guardrails: a **per-thread cap of 12 LLM calls** and a **15 requests/hour per-visitor rate limit**.
-- Instrumented with **LangSmith tracing**; containerised with Docker and **deployed to Render** with a health check.
+- Instrumented with **LangSmith tracing**; containerised with Docker and **deployed publicly** (Render for v1; v2 runs as a Vercel container) with a health check.
 
 ### Project entry (after v2)
 
-**Klyro Assistant — AI research & ops agent** · Python, LangGraph, LangSmith, Postgres/pgvector, FastAPI, Streamlit, Docker, GitHub Actions · [live link] · [repo link]
+**Klyro Assistant — AI research & ops agent** · Python, LangGraph, LangSmith, Postgres (Neon), FAISS, FastAPI, Streamlit, Docker, Vercel, GitHub Actions, DeepSeek/Groq · https://agentic-chat-sepia.vercel.app · [repo link]
 
 Pick 4–5 bullets. Lead with observability and evals.
 
 **AI observability & evaluation (lead with these)**
-- Built an **LLM observability layer** on LangSmith: every run tagged by user, model, and release; tool calls traced as child spans; daily **p50/p95 latency, cost per conversation, and per-tool error rate** computed from the tracing API and surfaced on an admin dashboard.
-- Cut median cost per conversation from **$[before]** to **$[after]** ([what you changed, e.g. switched the router model / trimmed context]), measured over **[N]** traced conversations.
-- Shipped **online evaluation**: an LLM-as-judge groundedness check on **20%** of production traces plus in-app 👍/👎 feedback logged to each trace; groundedness **[X]%**, thumbs-up rate **[Y]%** over **[N]** answers.
+- Built an **LLM observability layer** on LangSmith: every run tagged by thread, model, release and phase, with emails/phones redacted from every span; tool calls traced as child spans; daily **p50/p95 latency, cost per conversation, and per-tool error rate** computed from the tracing API and surfaced on a login-protected dashboard. Breaking the search API key on purpose exposed a blind spot (tools that return errors counted as successes), fixed and re-verified.
+- *(only after a measured before/after comparison)* Cut median cost per conversation from **$[before]** to **$[after]** ([what you changed, e.g. switched the router model / trimmed context]), measured over **[N]** traced conversations.
+- *(only after the LangSmith judge rule is set up and has data)* Shipped **online evaluation**: an LLM-as-judge groundedness check on **20%** of production traces plus in-app 👍/👎 feedback logged to each trace; groundedness **[X]%**, thumbs-up rate **[Y]%** over **[N]** answers.
 - Set up alerting on tool error rate and p95 latency; verified by **injecting a failing API key**, alert fired within **[T]** minutes.
 - Built a **40-case offline eval suite** (tool-selection accuracy, LLM-as-judge faithfulness, cost) running in **GitHub Actions** on every PR; blocks merges on a >5-point accuracy regression. Baseline: **95%** tool accuracy, **90%** answer pass rate (LLM-as-judge) over 40 cases at **~$0.0014 per case**; a deliberately broken prompt dropped tool accuracy to 72.5% and was blocked.
 
 **Agent & product**
-- Took the agent from demo to product: **Gmail OAuth sending** gated by human approval, with a full **audit log** of every approve/reject/edit decision (**[N]** decisions logged, **[E]%** edited before sending).
+- *(only after Phase 3b ships)* Took the agent from demo to product: **Gmail OAuth sending** gated by human approval, with a full **audit log** of every approve/reject/edit decision (**[N]** decisions logged, **[E]%** edited before sending).
 - Hardened against **prompt injection in retrieved content**: **10/10** adversarial cases blocked from triggering outbound actions; personal data redacted from traces.
-- Migrated state from SQLite to **Postgres (LangGraph PostgresSaver + pgvector)**, so conversations survive redeploys.
+- Migrated state from SQLite to **Postgres (LangGraph PostgresSaver on Neon)**, so conversations survive redeploys; single-user login with HMAC-signed API tokens.
 
 ### Wording rules
 

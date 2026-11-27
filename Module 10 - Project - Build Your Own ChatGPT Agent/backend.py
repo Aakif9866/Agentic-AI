@@ -181,7 +181,9 @@ def _git_sha() -> str:
         return "unknown"
 
 
-APP_VERSION = (os.getenv("RENDER_GIT_COMMIT") or "")[:7] or _git_sha()
+# The image has no git, so the deploy passes the version in: `vercel deploy -e APP_VERSION=<sha>`.
+# VERCEL_GIT_COMMIT_SHA covers git-triggered Vercel deploys; _git_sha() covers local runs.
+APP_VERSION = (os.getenv("APP_VERSION") or os.getenv("VERCEL_GIT_COMMIT_SHA") or "")[:7] or _git_sha()
 _TRACERS = []
 if os.getenv("LANGSMITH_TRACING", "").lower() == "true":
     from langchain_core.tracers.langchain import LangChainTracer

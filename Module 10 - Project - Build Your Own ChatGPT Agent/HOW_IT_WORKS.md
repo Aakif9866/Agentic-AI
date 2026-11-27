@@ -14,7 +14,7 @@ uv run streamlit run ui_streamlit.py      # open http://localhost:8501
  You type a question
         │
         ▼
- ui_streamlit.py ── rate limit: 15 questions / hour / visitor
+ ui_streamlit.py ── login gate, then rate limit: 15 questions / hour
         │
         ▼
  backend.py  (a LangGraph "agent loop")
@@ -31,12 +31,12 @@ uv run streamlit run ui_streamlit.py      # open http://localhost:8501
  Everything is saved under this chat's thread_id (Postgres on Neon, or chatbot.db locally)
 ```
 
-Five files do all the work:
+Five files do the core work (v2 added the four below them):
 
 | File | Its one job |
 |---|---|
 | [ui_streamlit.py](ui_streamlit.py) | What you see: the page, the sidebar, the rate limit, streaming the answer |
-| [backend.py](backend.py) | The brain: the agent loop, memory, the budget cap, the rate limiter |
+| [backend.py](backend.py) | The brain: the agent loop, memory, the budget cap, the search cap, the rate limiter, trace tagging |
 | [tools.py](tools.py) | What the agent can *do*: calculator, web search, PDF search, email |
 | [ingest.py](ingest.py) | One-off: turns `sample_notes.pdf` into a searchable index (`faiss_db/`) |
 | [api.py](api.py) | Optional: the same agent as a JSON API, for other programs to call |
@@ -51,13 +51,13 @@ Five files do all the work:
 
 Follow one question through the code:
 
-1. **You hit Enter.** [ui_streamlit.py:194](ui_streamlit.py#L194) picks up your text, and [ui_streamlit.py:196](ui_streamlit.py#L196) checks the rate limit. If you've used 15 questions this hour, you get a "wait N minutes" message and nothing else runs.
-2. **The question goes into the graph.** [ui_streamlit.py:210](ui_streamlit.py#L210) calls `agent.stream(...)` with your message and this chat's `thread_id`.
+1. **You hit Enter.** [ui_streamlit.py:222](ui_streamlit.py#L222) picks up your text, and [ui_streamlit.py:224](ui_streamlit.py#L224) checks the rate limit. If you've used 15 questions this hour, you get a "wait N minutes" message and nothing else runs.
+2. **The question goes into the graph.** [ui_streamlit.py:239](ui_streamlit.py#L239) calls `agent.stream(...)` with your message and `run_config(thread_id)`, which carries this chat's `thread_id` plus the trace tags.
 3. **LangGraph loads the history.** Before running anything, it reads every earlier message in this thread from the checkpointer (Postgres on Neon when `DATABASE_URL` is set, else `chatbot.db`). That's how the agent "remembers".
-4. **The `chat` node calls the LLM.** [backend.py:46](backend.py#L46) sends the system prompt, the history and your question to the model. The model has been told which tools exist ([backend.py:39](backend.py#L39), `bind_tools`).
-5. **The model replies with a tool request, not an answer:** "call `calculator` with `128*47`". It decides this itself; nothing in the code says "use the calculator for maths" except the system prompt ([backend.py:17](backend.py#L17)).
-6. **`tools_condition` sees the request** ([backend.py:70](backend.py#L70)) and routes to the `tools` node, which runs `calculator` ([tools.py:48](tools.py#L48)) and gets back `"6016"`.
-7. **Back to `chat`** ([backend.py:71](backend.py#L71)). The model now sees the tool result and writes the answer: "The result is **6,016**."
+4. **The `chat` node calls the LLM.** [backend.py:130](backend.py#L130) sends the system prompt, the history and your question to the model. The model has been told which tools exist ([backend.py:59](backend.py#L59), `bind_tools`).
+5. **The model replies with a tool request, not an answer:** "call `calculator` with `128*47`". It decides this itself; nothing in the code says "use the calculator for maths" except the system prompt ([backend.py:19](backend.py#L19)).
+6. **`tools_condition` sees the request** ([backend.py:150](backend.py#L150)) and routes to the `tools` node, which runs `calculator` ([tools.py:48](tools.py#L48)) and gets back `"6016"`.
+7. **Back to `chat`** ([backend.py:151](backend.py#L151)). The model now sees the tool result and writes the answer: "The result is **6,016**."
 8. **No tool request this time**, so the graph ends. Each token was streamed to your screen as it arrived, and the orange **calculator** badge shows which tool was used.
 
 That loop (model → tool → model → … → answer) is what makes this an **agent** rather than a chatbot. The model chooses the steps; the code only runs them.
@@ -69,13 +69,13 @@ That loop (model → tool → model → … → answer) is what makes this an **
 ### Tool calling
 An LLM can only produce text. Tool calling lets it produce a *structured request* ("call this function with these arguments") instead. Your code runs the function and hands the result back.
 - Tools are plain Python functions with `@tool` and a docstring. **The docstring is what the model reads** to decide when to use it. See [tools.py](tools.py).
-- `bind_tools(ALL_TOOLS)` tells the model they exist: [backend.py:39](backend.py#L39).
+- `bind_tools(ALL_TOOLS)` tells the model they exist: [backend.py:59](backend.py#L59).
 
 ### The agent loop (LangGraph)
-A graph of **nodes** (functions) joined by **edges** (what runs next). There are just two nodes here, `chat` and `tools`, plus one conditional edge that loops between them: [backend.py:66-71](backend.py#L66-L71).
+A graph of **nodes** (functions) joined by **edges** (what runs next). There are just two nodes here, `chat` and `tools`, plus one conditional edge that loops between them: [backend.py:146-151](backend.py#L146-L151).
 
 ### Memory and threads (checkpointing)
-After every step, LangGraph saves the whole conversation state to Postgres (or SQLite when `DATABASE_URL` is unset), keyed by `thread_id`: [backend.py:73-90](backend.py#L73-L90).
+After every step, LangGraph saves the whole conversation state to Postgres (or SQLite when `DATABASE_URL` is unset), keyed by `thread_id`: [backend.py:153-170](backend.py#L153-L170).
 - Same `thread_id` means it remembers; a new one starts fresh.
 - The app keeps the thread id in the URL (`?t=...`), so refreshing the page keeps your chat.
 
@@ -86,9 +86,9 @@ How the agent answers questions about *your* PDF without being trained on it.
 3. **Generate:** the model answers using only those chunks, and cites the pages.
 
 ### Human-in-the-loop
-Some actions shouldn't happen without a person saying yes. `send_email` calls `interrupt(...)` ([tools.py:76](tools.py#L76)), which **freezes the graph mid-step** and saves it.
-- The UI notices the paused draft ([ui_streamlit.py:176](ui_streamlit.py#L176)) and shows the approval card.
-- Approve/Reject sends `Command(resume=...)` ([ui_streamlit.py:186](ui_streamlit.py#L186)), and the graph carries on from exactly where it stopped.
+Some actions shouldn't happen without a person saying yes. `send_email` calls `interrupt(...)` ([tools.py:94](tools.py#L94)), which **freezes the graph mid-step** and saves it.
+- The UI notices the paused draft ([ui_streamlit.py:203](ui_streamlit.py#L203)) and shows the approval card.
+- Approve/Reject sends `Command(resume=...)` ([ui_streamlit.py:213](ui_streamlit.py#L213)), and the graph carries on from exactly where it stopped.
 
 ### Streaming
 `stream_mode="messages"` hands over each token as the model produces it, so text appears as it's written instead of all at once at the end.
@@ -97,11 +97,14 @@ Some actions shouldn't happen without a person saying yes. `send_email` calls `i
 
 | Guard | Stops | Where |
 |---|---|---|
-| 15 questions / visitor / hour | strangers using up your free API quota | [backend.py:92](backend.py#L92) |
-| 12 model calls per chat | a runaway loop or one very long chat | [backend.py:33](backend.py#L33) |
+| Login (v2) | strangers using the app or reading your chats | [auth.py](auth.py), called at the top of [ui_streamlit.py](ui_streamlit.py) |
+| 15 questions / visitor / hour | a runaway client using up the free API quota | [backend.py:244](backend.py#L244) |
+| 12 model calls per chat | a runaway loop or one very long chat | [backend.py:46](backend.py#L46) |
+| 2 web searches per question (v2) | the model searching 5–7 times for one answer | `searches_this_turn` in [backend.py](backend.py) |
 | 25 graph steps per question | a model stuck calling tools forever | `recursion_limit` in [ui_streamlit.py](ui_streamlit.py) |
 | Calculator whitelist | the LLM running arbitrary Python via `eval` | [tools.py:34](tools.py#L34) |
-| Own chats only in sidebar | visitors reading each other's conversations | [ui_streamlit.py](ui_streamlit.py) sidebar |
+| Untrusted-data rule + `EMAIL_ALLOWLIST` (v2) | a document or web page telling the agent to email someone | `SYSTEM` in [backend.py](backend.py), `recipient_allowed` in [tools.py](tools.py) |
+| PII redaction (v2) | emails/phone numbers leaking into LangSmith | [redact.py](redact.py) |
 
 ---
 
@@ -114,8 +117,10 @@ Some actions shouldn't happen without a person saying yes. `send_email` calls `i
 | PDF embeddings | **MiniLM**, runs inside the app | free | `EMBED_MODEL` (then re-run `ingest.py`) |
 | Memory | Postgres on Neon (`DATABASE_URL`); falls back to SQLite `chatbot.db` | free | `DATABASE_URL` |
 | Tracing | **LangSmith** | free tier | `LANGSMITH_*` in `.env` |
+| Evals (v2) | **DeepSeek** V4.1-Flash, agent + judge | about a cent per 40-case run | `CHAT_MODEL` / `JUDGE_MODEL=deepseek:deepseek-flash` |
+| Hosting (v2) | **Vercel** container | Hobby (free) | [Dockerfile.vercel](Dockerfile.vercel) |
 
-`init_chat_model("provider:model")` ([backend.py:37-39](backend.py#L37-L39)) is why switching providers is a config change, not a code change.
+`init_chat_model("provider:model")` ([backend.py:58-59](backend.py#L58-L59)) is why switching providers is a config change, not a code change.
 
 ---
 
@@ -128,42 +133,47 @@ Predict what will happen *before* each one, then check.
 3. **Two tools in one question.** "Search the web for the population of Japan and divide it by 47." Which badges appear?
 4. **Approval.** Ask it to email someone. Edit the draft before approving, and check what it says was sent.
 5. **Break the docstring.** Change `calculator`'s docstring to something vague and restart. Does the model still use it?
-6. **Break memory.** In [backend.py:75](backend.py#L75), remove `checkpointer=checkpointer`. What happens to follow-ups, and to the email approval?
+6. **Break memory.** In [backend.py:170](backend.py#L170), remove `checkpointer=checkpointer`. What happens to follow-ups, and to the email approval?
 7. **Hit the limit.** Run with `RATE_LIMIT_PER_HOUR=2 uv run streamlit run ui_streamlit.py` and ask three questions.
 
 Undo each break with `git checkout <file>`.
 
 ---
 
-## 6. Deploying it (Render, free tier)
+## 6. Deploying it (Vercel, from the terminal)
 
-The [Dockerfile](Dockerfile) builds everything: dependencies (CPU-only torch to keep the image small), the PDF index and the embedding model. It then serves this Streamlit app.
+**Live: https://agentic-chat-sepia.vercel.app.** Vercel builds [Dockerfile.vercel](Dockerfile.vercel) into a container: dependencies (CPU-only torch to keep it smaller), the PDF index and the embedding model, then serves this Streamlit app on port 80. [.vercelignore](.vercelignore) keeps `.env` and the 1.3 GB `.venv` out of the upload.
 
-1. **Push the code to GitHub.**
-2. On [render.com](https://render.com): **New → Web Service**, then connect the GitHub repo.
-3. Settings:
+```bash
+cd "Module 10 - Project - Build Your Own ChatGPT Agent"
+npx vercel@67.0.0 login                                        # once
+npx vercel@67.0.0 link --yes --project agentic-chat
+npx vercel@67.0.0 project update --framework container --yes   # without this: build does nothing, site 404s
+printf '%s' "$VALUE" | npx vercel@67.0.0 env add NAME production  # once per variable below
+npx vercel@67.0.0 deploy --prod --yes -e APP_VERSION=$(git rev-parse --short HEAD)
+```
 
-   | Setting | Value |
-   |---|---|
-   | Runtime | Docker (detected automatically) |
-   | Root Directory | `Module 10 - Project - Build Your Own ChatGPT Agent` (leave blank if this folder *is* the repo) |
-   | Instance type | Free |
-   | Health check path | `/_stcore/health` |
-   | Environment variables | `GROQ_API_KEY`, `TAVILY_API_KEY`, `DATABASE_URL` (Neon pooled URL), `APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET` (login; **without these three nobody can log in**). Optional: `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` + `LANGSMITH_PROJECT`, `EMAIL_ALLOWLIST` |
+| Variable | Why |
+|---|---|
+| `GROQ_API_KEY`, `TAVILY_API_KEY` | the model and web search |
+| `DATABASE_URL` | Neon **pooled** URL, so chats survive redeploys |
+| `APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET` | the login. **Without all three nobody can log in** (it fails closed) |
+| `LANGSMITH_TRACING=true`, `LANGSMITH_API_KEY`, `LANGSMITH_PROJECT` | optional: traces, dashboard, feedback |
+| `EMAIL_ALLOWLIST` | optional: limit who the agent may email |
 
-4. Click **Deploy**. The first build takes ~5–10 minutes. You get a URL like `https://<name>.onrender.com`.
+**What to expect on Vercel Hobby:**
+- **It scales to zero** after 5 idle minutes. The next visit is a cold start while torch and the embedding model load.
+- **A connection lasts at most 5 minutes.** Streamlit reconnects by itself, but the login lives in that session, so you may have to sign in again. Chats are safe: they're in Neon and the chat id is in the URL (`?t=...`).
+- **2 GB of memory**, plenty for this app (v1 peaked at ~496 MB on Render's 512 MB).
+- **Never** put keys in the code or the image. They go only in the Vercel project's env vars.
 
-**What to expect on the free tier:**
-- **It sleeps** after ~15 idle minutes, and the first visit after that takes ~1 minute to wake it.
-- **Chats survive redeploys** once `DATABASE_URL` points at Neon (v2 Phase 1). The rate-limit counters still reset, because they live in memory.
-- **Memory is tight.** It peaked around 496 of 512 MB in testing. If Render logs "out of memory", switch to a lighter embedding model or the next instance size.
-- **Never** put keys in the code or the image. They go only in Render's Environment tab.
+v1 ran on Render's free tier from the plain [Dockerfile](Dockerfile) (dashboard deploy, health check `/_stcore/health`). It's retired.
 
 ---
 
 ## 7. Do you need a separate repo?
 
-**To deploy: no.** Render can deploy straight from this course repo. Set **Root Directory** to this module's folder (step 3 above). That's the fastest path.
+**To deploy: no.** Vercel deploys straight from this folder (section 6). That's the fastest path.
 
 **To understand it better: rebuilding is what helps, not copying.** Copying the folder into a new repo teaches nothing new. What does work is rebuilding it from an empty folder, one concept at a time, running it after each step:
 
