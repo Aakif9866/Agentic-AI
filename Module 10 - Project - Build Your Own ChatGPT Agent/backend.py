@@ -70,8 +70,23 @@ graph.add_edge(START, "chat")
 graph.add_conditional_edges("chat", tools_condition)
 graph.add_edge("tools", "chat")
 
-conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-checkpointer = SqliteSaver(conn)
+# Postgres (Neon) when DATABASE_URL is set, so chats survive Render redeploys.
+# SQLite stays as the fallback for CI/evals and offline dev.
+DATABASE_URL = os.getenv("DATABASE_URL")
+if DATABASE_URL:
+    from langgraph.checkpoint.postgres import PostgresSaver
+    from psycopg_pool import ConnectionPool
+
+    # prepare_threshold=0: Neon's pooled URL goes through PgBouncer, which breaks
+    # server-side prepared statements.
+    pool = ConnectionPool(
+        DATABASE_URL, kwargs={"autocommit": True, "prepare_threshold": 0}, open=True
+    )
+    checkpointer = PostgresSaver(pool)
+    checkpointer.setup()  # idempotent: creates/migrates tables, safe on every boot
+else:
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    checkpointer = SqliteSaver(conn)
 agent = graph.compile(checkpointer=checkpointer)
 
 

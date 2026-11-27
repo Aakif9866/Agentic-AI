@@ -152,6 +152,6 @@ This project is most of the plumbing the later capstones reuse. For RepoSage-sty
 
 ## Known limitations
 
-- **SQLite on a free host doesn't persist.** Render wipes the disk on redeploy and on sleep. Swap `SqliteSaver` → `PostgresSaver` for real durability.
+- **SQLite on a free host doesn't persist.** Render wipes the disk on redeploy and on sleep. Fixed in v2 Phase 1: `PostgresSaver` on Neon via `DATABASE_URL` (pooled URL needs `prepare_threshold=0`).
 - **No thread deletion.** `SqliteSaver` has no built-in delete; you'd add a "deleted" table and filter in `all_thread_ids()`.
 - **The embedding model downloads ~90MB on first use.** The Dockerfile pre-bakes it so a cold container doesn't pay that on its first request.

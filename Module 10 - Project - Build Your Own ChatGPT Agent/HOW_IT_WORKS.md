@@ -71,7 +71,7 @@ An LLM can only produce text. Tool calling lets it produce a *structured request
 A graph of **nodes** (functions) joined by **edges** (what runs next). There are just two nodes here, `chat` and `tools`, plus one conditional edge that loops between them: [backend.py:66-71](backend.py#L66-L71).
 
 ### Memory and threads (checkpointing)
-After every step, LangGraph saves the whole conversation state to SQLite, keyed by `thread_id`: [backend.py:74-75](backend.py#L74-L75).
+After every step, LangGraph saves the whole conversation state to Postgres (or SQLite when `DATABASE_URL` is unset), keyed by `thread_id`: [backend.py:73-90](backend.py#L73-L90).
 - Same `thread_id` means it remembers; a new one starts fresh.
 - The app keeps the thread id in the URL (`?t=...`), so refreshing the page keeps your chat.
 
@@ -108,7 +108,7 @@ Some actions shouldn't happen without a person saying yes. `send_email` calls `i
 | LLM | **Groq**, `openai/gpt-oss-120b` | free tier | `CHAT_MODEL=openai:gpt-4o-mini` |
 | Web search | **Tavily** | free tier | `TAVILY_API_KEY` |
 | PDF embeddings | **MiniLM**, runs inside the app | free | `EMBED_MODEL` (then re-run `ingest.py`) |
-| Memory | SQLite file `chatbot.db` | free | `CHECKPOINT_DB` |
+| Memory | Postgres on Neon (`DATABASE_URL`); falls back to SQLite `chatbot.db` | free | `DATABASE_URL` |
 | Tracing | **LangSmith** | free tier | `LANGSMITH_*` in `.env` |
 
 `init_chat_model("provider:model")` ([backend.py:37-39](backend.py#L37-L39)) is why switching providers is a config change, not a code change.
@@ -151,7 +151,7 @@ The [Dockerfile](Dockerfile) builds everything: dependencies (CPU-only torch to 
 
 **What to expect on the free tier:**
 - **It sleeps** after ~15 idle minutes, and the first visit after that takes ~1 minute to wake it.
-- **Chats are wiped** on every redeploy and every sleep, because the disk isn't persistent. The rate-limit counters reset too. The fix is `PostgresSaver` with a free Neon database (same `compile(checkpointer=...)` line, different class).
+- **Chats survive redeploys** once `DATABASE_URL` points at Neon (v2 Phase 1). The rate-limit counters still reset, because they live in memory.
 - **Memory is tight.** It peaked around 496 of 512 MB in testing. If Render logs "out of memory", switch to a lighter embedding model or the next instance size.
 - **Never** put keys in the code or the image. They go only in Render's Environment tab.
 

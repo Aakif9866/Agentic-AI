@@ -149,7 +149,7 @@ Threads are isolated by `thread_id`; two threads never see each other's state.
 | **Tavily** | `tools.py:web_search` | missing key at *construction* time | `load_dotenv()` lives in `tools.py` because the key is read at import |
 | **HuggingFace** | `tools.py:EMBEDDINGS` | ~90MB download on first use | Dockerfile pre-bakes it so cold containers don't pay it |
 | **FAISS** (local) | `search_docs` | index absent | returns `"No document has been uploaded yet."` as text |
-| **SQLite** (local) | checkpointer | wiped on free-tier redeploy | documented limitation; `PostgresSaver` is the fix |
+| **Postgres** (Neon) / SQLite fallback | checkpointer | SQLite is wiped on free-tier redeploy | v2 Phase 1: `PostgresSaver` when `DATABASE_URL` is set |
 
 ---
 

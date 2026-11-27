@@ -11,7 +11,7 @@ import streamlit as st
 from langchain_core.messages import AIMessageChunk, ToolMessage
 from langgraph.types import Command
 
-from backend import CHAT_MODEL, RATE_LIMIT_PER_HOUR, agent, pending_approval, rate_limit
+from backend import CHAT_MODEL, DATABASE_URL, RATE_LIMIT_PER_HOUR, agent, pending_approval, rate_limit
 
 st.set_page_config(page_title="Agent", page_icon="✦", layout="centered")
 
@@ -140,7 +140,7 @@ with st.sidebar:
         f'<div class="label">Under the hood</div><div class="spec">'
         f"<b>Model</b> {html.escape(model)} on {html.escape(provider.title())}<br>"
         f"<b>Web search</b> Tavily<br><b>PDF search</b> FAISS + MiniLM<br>"
-        f"<b>Memory</b> LangGraph checkpoints</div>",
+        f"<b>Memory</b> LangGraph checkpoints on {'Postgres' if DATABASE_URL else 'SQLite'}</div>",
         unsafe_allow_html=True,
     )
 

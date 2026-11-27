@@ -21,7 +21,7 @@ Needs `GROQ_API_KEY` and `TAVILY_API_KEY` in `.env`.
 | LLM | Groq, `openai/gpt-oss-120b` (free tier) | `CHAT_MODEL` (e.g. `openai:gpt-4o-mini`) |
 | Web search | Tavily | `TAVILY_API_KEY` |
 | PDF search | FAISS + `all-MiniLM-L6-v2`, runs locally, no API | `EMBED_MODEL` |
-| Memory | LangGraph `SqliteSaver` → `chatbot.db` | `CHECKPOINT_DB` |
+| Memory | LangGraph `PostgresSaver` on Neon when `DATABASE_URL` is set, else `SqliteSaver` → `chatbot.db` | `DATABASE_URL`, `CHECKPOINT_DB` |
 | Tracing | LangSmith (optional) | `LANGSMITH_*` |
 
 ## Abuse limits
@@ -74,7 +74,7 @@ An empty `/chat` stream means "check `/pending`" — that is the client's cue, n
 
 Render: New → Web Service → connect repo → it detects the `Dockerfile` (which serves the Streamlit app; set the health check path to `/_stcore/health`). Set `GROQ_API_KEY` and `TAVILY_API_KEY` as environment variables in the dashboard, never in the image.
 
-**Free-tier limitation:** the container's disk is wiped on redeploy and on sleep, so `chatbot.db` disappears and all threads are lost. For real persistence swap `SqliteSaver` for `PostgresSaver` (`langgraph-checkpoint-postgres`) against a free Neon/Supabase/Render Postgres. Same `compile(checkpointer=...)` call, different class.
+**Persistence (v2 Phase 1):** set `DATABASE_URL` to a Neon **pooled** connection string and threads live in Postgres, so they survive redeploys and sleep. Without it the app falls back to `chatbot.db`, which the free-tier disk wipes.
 
 ## Done-means checklist
 
