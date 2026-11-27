@@ -13,7 +13,7 @@ from langgraph.types import Command
 
 from auth import require_login
 from backend import (
-    CHAT_MODEL, DATABASE_URL, RATE_LIMIT_PER_HOUR, agent, all_thread_ids,
+    CHAT_MODEL, DATABASE_URL, RATE_LIMIT_PER_HOUR, agent, all_thread_ids, checkpointer,
     pending_approval, rate_limit, run_config, thread_title,
 )
 
@@ -123,6 +123,10 @@ with st.sidebar:
     st.markdown('<div class="brand"><span class="brand-mark">✦</span>Agent</div>', unsafe_allow_html=True)
     st.write("")
     if st.button(":material/add: New chat", use_container_width=True):
+        st.query_params["t"] = str(uuid.uuid4())
+        st.rerun()
+    if messages and st.button(":material/delete: Delete this chat", use_container_width=True):
+        checkpointer.delete_thread(thread_id)  # every checkpoint of this thread, gone
         st.query_params["t"] = str(uuid.uuid4())
         st.rerun()
 

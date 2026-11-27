@@ -5,7 +5,7 @@ from langchain_core.messages import AIMessageChunk
 from langgraph.types import Command
 
 from auth import check_login, make_token, verify_token
-from backend import agent, pending_approval, run_config
+from backend import agent, checkpointer, pending_approval, run_config
 
 app = FastAPI(title="ChatGPT-style Agent (Modules 6-9 combined)")
 
@@ -71,6 +71,13 @@ def approve(body: ApproveIn):
         resume_value["edited_body"] = body.edited_body
     result = agent.invoke(Command(resume=resume_value), cfg)
     return {"final_message": result["messages"][-1].content}
+
+
+@app.delete("/threads/{thread_id}", dependencies=[Depends(require_token)])
+def delete_thread(thread_id: str):
+    """Delete a conversation and all its checkpoints."""
+    checkpointer.delete_thread(thread_id)
+    return {"deleted": thread_id}
 
 
 @app.get("/health")
