@@ -33,7 +33,7 @@ graph TD
 
     subgraph Core
         BE[backend.py<br/>StateGraph + budget cap]
-        CP[(chatbot.db<br/>SqliteSaver)]
+        CP[(Postgres on Neon / chatbot.db<br/>PostgresSaver / SqliteSaver)]
     end
 
     subgraph Tools["tools.py"]
@@ -114,7 +114,7 @@ sequenceDiagram
     C->>A: POST /approve {approved, edited_body}
     A->>G: invoke(Command(resume={...}))
     G->>T: interrupt() RETURNS the decision
-    T-->>G: {"status": "sent", body: edited}
+    T-->>G: {"status": "sent", body: edited} (simulated until Gmail, Phase 3b)
     G-->>A: final message
     A-->>C: {final_message}
 ```
@@ -231,11 +231,13 @@ uv run streamlit run ui_streamlit.py         # optional UI
 MAX_LLM_CALLS_PER_THREAD=3 uv run python budget_demo.py   # budget guard
 ```
 
-Required: `GROQ_API_KEY`, `TAVILY_API_KEY`. Optional: `CHAT_MODEL`, `EMBED_MODEL`, `CHECKPOINT_DB`, `MAX_LLM_CALLS_PER_THREAD`, `LANGSMITH_*`.
+Required: `GROQ_API_KEY`, `TAVILY_API_KEY`, and for login `APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET`. Optional: `DATABASE_URL`, `CHAT_MODEL`, `EMBED_MODEL`, `CHECKPOINT_DB`, `MAX_LLM_CALLS_PER_THREAD`, `MAX_SEARCHES_PER_TURN`, `EMAIL_ALLOWLIST`, `LANGSMITH_*`. Every API route except `/login` and `/health` needs `Authorization: Bearer <token>`.
 
-**Verified** (live server, real APIs): `/health`; streaming `/chat`; memory across calls on one `thread_id`; thread isolation; calculator; RAG with page citations; `send_email` pause → `/pending` → `/approve` with `edited_body` reaching the tool; `/threads`; the budget cap; Streamlit boots clean (HTTP 200).
+**Verified** (live server, real APIs): `/health`; streaming `/chat`; memory across calls on one `thread_id`; thread isolation; calculator; RAG with page citations; `send_email` pause → `/pending` → `/approve` with `edited_body` reaching the tool; the budget cap; Streamlit boots clean (HTTP 200).
 
-**Not verified:** this module's own `docker build` (it adds an embedding-model pre-bake step that Module 9's verified image lacks); the Streamlit UI has never been clicked through.
+**Verified in v2** (2026-11-27, see NOTES.md): Postgres persistence across processes; login/token 401s; `/threads` removed and `DELETE /threads/{id}` added; trace redaction span by span; 40-case eval baseline and gate failure on a broken prompt; alert firing on a broken Tavily key; Streamlit UI driven through login, chat, feedback, delete and dashboard with AppTest.
+
+**Not verified:** the v2 image on Render (v1's image built and ran there, health green); real Gmail sending (Phase 3b). The UI has been driven programmatically (Streamlit AppTest), not clicked through by hand on the live URL.
 
 ## 11. Troubleshooting
 

@@ -1,5 +1,7 @@
 # Module 10 v2: implementation plan
 
+> **Status (2026-11-27):** Phases 1, 3a, 5, 6, 7 built and verified; 3b (Gmail) parked. Live status table: [V2_SCOPE.md](V2_SCOPE.md). Changes from this plan: evals run on DeepSeek V4.1-Flash (Groq's daily cap broke full runs); web-search cap and tool-error retry were added in code after evals exposed them; chat deletion added.
+
 ## Context
 v1 works, but it's a demo. Chats are wiped on every Render redeploy, `send_email` is fake, the public URL has no login, and nothing is measured. [V2_SCOPE.md](V2_SCOPE.md) is the goal doc, and it already has the user's edits: Phases 2 and 4 are dropped because this is a single-user app, and Phase 3 now has a fixed username/password login with an API token. This plan turns that doc into concrete steps for each phase.
 

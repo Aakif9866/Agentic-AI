@@ -12,7 +12,7 @@ uv run uvicorn api:app --reload               # optional JSON API on :8000
 uv run python test_rate_limit.py              # limiter self-check
 ```
 
-Needs `GROQ_API_KEY` and `TAVILY_API_KEY` in `.env`.
+Needs `GROQ_API_KEY` and `TAVILY_API_KEY` in `.env`, plus `APP_USERNAME`, `APP_PASSWORD` and `APP_SECRET` to log in. `DATABASE_URL` (Neon) is optional locally; without it chats go to `chatbot.db`.
 
 ## What it runs on
 
@@ -85,7 +85,7 @@ An empty `/chat` stream means "check `/pending`" — that is the client's cue, n
 
 ## Deploying
 
-Render: New → Web Service → connect repo → it detects the `Dockerfile` (which serves the Streamlit app; set the health check path to `/_stcore/health`). Set `GROQ_API_KEY` and `TAVILY_API_KEY` as environment variables in the dashboard, never in the image.
+Render: New → Web Service → connect repo → it detects the `Dockerfile` (which serves the Streamlit app; set the health check path to `/_stcore/health`). Environment variables (dashboard only, never in the image): `GROQ_API_KEY`, `TAVILY_API_KEY`, `DATABASE_URL` (Neon pooled URL), `APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET` (login; **without these three nobody can log in**). Optional: `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` + `LANGSMITH_PROJECT`, `EMAIL_ALLOWLIST`. Set them **before** deploying v2.
 
 **Persistence (v2 Phase 1):** set `DATABASE_URL` to a Neon **pooled** connection string and threads live in Postgres, so they survive redeploys and sleep. Without it the app falls back to `chatbot.db`, which the free-tier disk wipes.
 
@@ -98,3 +98,10 @@ Render: New → Web Service → connect repo → it detects the `Dockerfile` (wh
 - [x] Email pauses, `/pending` shows the draft, `/approve` with `edited_body` changes what sends
 - [x] Deployed to Render (Streamlit app, `/_stcore/health` green): https://agentic-chat-pwvx.onrender.com
 - [x] LangSmith traces for 5 real conversations (calculator, web, PDF, memory, email-approval — project `agentic-ai-course`)
+
+**v2** (details and real output: [NOTES.md](NOTES.md) → "v2 evidence", status: [V2_SCOPE.md](V2_SCOPE.md))
+- [x] Chats in Postgres (Neon); a fresh process restores them · [ ] Render redeploy keeps them
+- [x] Login + API token; no token → 401; `/threads` removed; chats can be deleted
+- [x] 40-case eval suite: 95% tools, 90% answers, 10/10 injections blocked; a broken prompt fails the gate (exit 1)
+- [x] Every trace tagged and PII-redacted; `metrics.py` + dashboard; alert fired with a deliberately bad Tavily key
+- [ ] Real Gmail sending (Phase 3b, parked: needs a Google OAuth client)
