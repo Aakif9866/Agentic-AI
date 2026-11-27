@@ -91,7 +91,7 @@ def judge(question: str, answer: str, evidence: str, mode: str) -> Verdict | Non
         "You grade an AI assistant's answer. Be strict but fair. "
         'Respond with JSON of the exact form {"verdict": "pass"|"fail", "reason": str}.\n'
         f"{rule}\n\nQUESTION: {question}\n\n"
-        f"{'REFERENCE' if mode == 'reference' else 'TOOL OUTPUTS'}: {evidence[:4000]}\n\n"
+        f"{'REFERENCE' if mode == 'reference' else 'TOOL OUTPUTS'}: {evidence[:8000]}\n\n"
         f"ANSWER: {answer[:3000]}"
     )
     for attempt in range(4):
@@ -188,7 +188,7 @@ def sync_dataset(client: Client, cases: list[dict]) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--quick", type=int, default=0, help="only the first N cases")
-    ap.add_argument("--only", default="", help="only this category, e.g. injection")
+    ap.add_argument("--only", default="", help="only these categories, e.g. injection or web,docs")
     ap.add_argument("--max-drop", type=float, default=0.05, help="allowed accuracy drop vs baseline")
     ap.add_argument("--update-baseline", action="store_true")
     ap.add_argument("--prefix", default="module10", help="LangSmith experiment name prefix")
@@ -201,7 +201,7 @@ def main() -> int:
     order = {c["id"]: i for i, c in enumerate(cases)}
     examples = sorted(client.list_examples(dataset_name=name), key=lambda e: order[e.outputs["id"]])
     if args.only:
-        examples = [e for e in examples if e.outputs["category"] == args.only]
+        examples = [e for e in examples if e.outputs["category"] in args.only.split(",")]
     if args.quick:
         examples = examples[: args.quick]
 

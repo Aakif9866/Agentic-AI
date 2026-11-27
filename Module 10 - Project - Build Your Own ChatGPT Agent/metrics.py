@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import statistics
 import urllib.request
 import warnings
@@ -56,6 +57,18 @@ def _runs(since: datetime, **kw) -> list:
         ))
 
 
+# Many tools catch their own exceptions and RETURN the error (TavilySearch gives
+# "{'error': ValueError('Error 401...')}", our calculator "error: ..."), so LangSmith marks
+# the run as a success. Found by breaking the Tavily key on purpose: the alert stayed quiet.
+_RETURNED_ERROR = re.compile(r"""^\s*(\{\s*['"]error['"]|error\b)""", re.IGNORECASE)
+
+
+def tool_failed(run) -> bool:
+    out = (run.outputs or {}).get("output", run.outputs)
+    content = out.get("content", "") if isinstance(out, dict) else out
+    return run.error is not None or bool(_RETURNED_ERROR.match(str(content or "")))
+
+
 def _pct(xs: list[float], p: float) -> float:
     if not xs:
         return 0.0
@@ -78,7 +91,7 @@ def summarize(roots: list, tools: list) -> dict:
     by_tool: dict[str, list[int]] = defaultdict(lambda: [0, 0])  # name -> [ok, total]
     for t in tools:
         by_tool[t.name][1] += 1
-        by_tool[t.name][0] += t.error is None
+        by_tool[t.name][0] += not tool_failed(t)
     total_tools = sum(v[1] for v in by_tool.values())
     return {
         "turns": len(roots),

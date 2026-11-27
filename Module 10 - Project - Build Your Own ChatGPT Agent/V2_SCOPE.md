@@ -7,7 +7,7 @@
 > | 1 Postgres | ✅ local on Neon · ⏳ Render redeploy check |
 > | 3a Login + token | ✅ |
 > | 3b Gmail + audit | ⏸ parked (needs Google OAuth client) · recipient allowlist already done |
-> | 5 Observability | ✅ tags, redaction, metrics.py, dashboard, 👍/👎, alert job · ⏳ LangSmith UI filters + online judge rule, Discord webhook, break-it test on Render |
+> | 5 Observability | ✅ tags, redaction, metrics.py, dashboard, 👍/👎, alert job · ✅ break-it test fired (after fixing a blind spot) · ⏳ LangSmith UI filters + online judge rule, Discord webhook |
 > | 6 Eval suite + CI | ✅ 40 cases + PR workflow · ⏳ baseline (Groq daily cap hit; rerun on a fresh day), GitHub secrets, a deliberately bad PR |
 > | 7 Guardrails | ✅ 10/10 injection cases blocked, trace redaction verified |
 
@@ -121,7 +121,7 @@ React rewrite, voice, multi-agent supervisor, fine-tuning. Each looks impressive
 
 - [ ] Redeploy keeps all conversations (Phase 1)
 - [ ] A real email was sent and audited; a rejected one was audited too; no token → 401 (Phase 3)
-- [ ] `metrics.py` output pasted into `NOTES.md` with real numbers; an alert was fired on purpose (Phase 5)
+- [x] `metrics.py` output pasted into `NOTES.md` with real numbers; an alert was fired on purpose (Phase 5)
 - [ ] CI blocks a deliberately bad PR (Phase 6)
 - [x] Adversarial injection cases pass (Phase 7): 10/10
 - [ ] Every number in the resume section below is filled from a real run

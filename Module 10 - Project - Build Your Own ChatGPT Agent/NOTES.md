@@ -203,3 +203,33 @@ day         turns  conversations  p50_s  p95_s  tokens  cost_usd  cost_per_conve
 Run metadata on a real trace: `tags ['chat','module10']`, `app_version bd42c76`, `phase chat`; calculator appears as a child tool span.
 Dashboard page and 👍/👎 feedback widget both render with no exceptions (Streamlit AppTest, logged in).
 Pending: LangSmith UI saved filters + online judge rule, Discord webhook, the break-it-on-purpose alert test.
+
+### v2 evidence, session 2 (2026-11-27 evening)
+
+**Eval findings fixed.** `--only web,docs,no_tool,mixed` (experiment `fixes-bd665a0e`), on the cases that ran:
+- docs **6/6** (before: doc05 answered "my notes" questions from memory with no tool, about hardware interrupts)
+- greeting now mentions email approval (none01: fail → pass)
+- web searches per question: **max 2** (before: up to 7)
+- 4 cases hit the Groq daily cap again; the new guard refused to gate on them (exit 2), as designed.
+
+**Search cap moved from prompt to code.** The prompt rule "at most twice" was ignored (5 searches on one question).
+Now `chat_node` counts searches since the user's last message; at the cap, `answer_from_results()` asks the model
+with a flattened prompt (question + results as text, no tool history, no tool names). Two dead ends on the way, both Groq 400
+`Tool choice is none, but model called a tool`: (1) calling the unbound model with tool history still present,
+(2) a flattened prompt that still used SYSTEM, which *names* the tools. Lesson: gpt-oss will try to call any tool it can see mentioned.
+
+**Bug found: invented tool arguments crashed the chat.** gpt-oss-20b sent `tavily_search(topic="weather")`; Groq rejects
+invalid arguments *while generating* (400 `tool_use_failed`), which aborted the graph. `chat_node` now feeds the error
+back and retries once, then replies politely. Proven with a fake model: 1 failure → fixed, 2 → polite stop, other errors still raise.
+
+**Phase 5 break-it test: the alert did NOT fire at first.** With `TAVILY_API_KEY=tvly-deliberately-bad`, 3 web questions:
+```
+tool msgs: [('tavily_search', "{'error': ValueError('Error 401: Unauthorized: missing or invalid API key.')}")]
+metrics.py --alert  ->  ok: 3 turns, 3 tool calls in the last hour        <- blind spot
+```
+TavilySearch *returns* the error instead of raising, so LangSmith marks the run as a success. `metrics.tool_failed()` now also
+counts returned errors (`{'error': ...}` / `error: ...`), not guardrail blocks. Rerun:
+```
+Module 10 agent alert (last hour): tool error rate 100% ({'tavily_search': '0/3'})
+DISCORD_WEBHOOK_URL not set; alert printed only
+```
