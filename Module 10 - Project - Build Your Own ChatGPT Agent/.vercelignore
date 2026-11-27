@@ -1,0 +1,10 @@
+# Never upload secrets, local state or the 1.3GB venv.
+.env
+.env.*
+.venv/
+__pycache__/
+*.pyc
+chatbot.db
+faiss_db/
+*.log
+.vercel/

@@ -85,7 +85,18 @@ An empty `/chat` stream means "check `/pending`" — that is the client's cue, n
 
 ## Deploying
 
-Render: New → Web Service → connect repo → it detects the `Dockerfile` (which serves the Streamlit app; set the health check path to `/_stcore/health`). Environment variables (dashboard only, never in the image): `GROQ_API_KEY`, `TAVILY_API_KEY`, `DATABASE_URL` (Neon pooled URL), `APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET` (login; **without these three nobody can log in**). Optional: `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` + `LANGSMITH_PROJECT`, `EMAIL_ALLOWLIST`. Set them **before** deploying v2.
+**Live (v2): https://agentic-chat-sepia.vercel.app** — Vercel container deploy, from the terminal:
+
+```bash
+npx vercel@67.0.0 link --yes --project agentic-chat
+npx vercel@67.0.0 project update --framework container --yes   # else Vercel builds nothing and serves 404
+printf '%s' "$VALUE" | npx vercel@67.0.0 env add NAME production  # once per env var below
+npx vercel@67.0.0 deploy --prod --yes
+```
+
+Vercel builds [Dockerfile.vercel](Dockerfile.vercel) (same image as `Dockerfile`, port 80); [.vercelignore](.vercelignore) keeps `.env` and the 1.3 GB `.venv` out of the upload. Hobby limits to know: a connection lasts at most 5 minutes and idle containers scale to zero after 5 minutes, so expect a cold start (~torch + model load) and an occasional reconnect. Chats survive both (Neon + `?t=` in the URL).
+
+**Old: Render** (v1, no longer maintained): New → Web Service → connect repo → it detects the `Dockerfile` (which serves the Streamlit app; set the health check path to `/_stcore/health`). Environment variables (dashboard only, never in the image): `GROQ_API_KEY`, `TAVILY_API_KEY`, `DATABASE_URL` (Neon pooled URL), `APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET` (login; **without these three nobody can log in**). Optional: `LANGSMITH_TRACING=true` + `LANGSMITH_API_KEY` + `LANGSMITH_PROJECT`, `EMAIL_ALLOWLIST`. Set them **before** deploying v2.
 
 **Persistence (v2 Phase 1):** set `DATABASE_URL` to a Neon **pooled** connection string and threads live in Postgres, so they survive redeploys and sleep. Without it the app falls back to `chatbot.db`, which the free-tier disk wipes.
 
@@ -96,11 +107,12 @@ Render: New → Web Service → connect repo → it detects the `Dockerfile` (wh
 - [x] Math goes through `calculator`, not mental arithmetic
 - [x] PDF questions cite page numbers
 - [x] Email pauses, `/pending` shows the draft, `/approve` with `edited_body` changes what sends
-- [x] Deployed to Render (Streamlit app, `/_stcore/health` green): https://agentic-chat-pwvx.onrender.com
+- [x] Deployed to Render (Streamlit app, `/_stcore/health` green): https://agentic-chat-pwvx.onrender.com (v1, superseded by Vercel below)
 - [x] LangSmith traces for 5 real conversations (calculator, web, PDF, memory, email-approval — project `agentic-ai-course`)
 
 **v2** (details and real output: [NOTES.md](NOTES.md) → "v2 evidence", status: [V2_SCOPE.md](V2_SCOPE.md))
-- [x] Chats in Postgres (Neon); a fresh process restores them · [ ] Render redeploy keeps them
+- [x] Chats in Postgres (Neon); a fresh process restores them
+- [x] Deployed to Vercel: https://agentic-chat-sepia.vercel.app (health 200, WebSocket 101, Sign-in form renders with no exceptions) · [ ] a chat survives a redeploy
 - [x] Login + API token; no token → 401; `/threads` removed; chats can be deleted
 - [x] 40-case eval suite: 95% tools, 90% answers, 10/10 injections blocked; a broken prompt fails the gate (exit 1)
 - [x] Every trace tagged and PII-redacted; `metrics.py` + dashboard; alert fired with a deliberately bad Tavily key

@@ -4,7 +4,7 @@
 >
 > | Phase | State |
 > |---|---|
-> | 1 Postgres | ✅ local on Neon · ⏳ Render redeploy check |
+> | 1 Postgres | ✅ local on Neon · ✅ deployed on Vercel (https://agentic-chat-sepia.vercel.app) · ⏳ check a chat survives a redeploy |
 > | 3a Login + token | ✅ |
 > | 3b Gmail + audit | ⏸ parked (needs Google OAuth client) · recipient allowlist already done |
 > | 5 Observability | ✅ tags, redaction, metrics.py, dashboard, 👍/👎, alert job · ✅ break-it test fired (after fixing a blind spot) · ⏳ LangSmith UI filters + online judge rule, Discord webhook |

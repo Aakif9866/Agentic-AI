@@ -257,3 +257,18 @@ backend.py restored byte-for-byte (cmp) afterwards.
 
 **Spend.** DeepSeek balance $1.56 → $1.55 for two full 40-case runs + a 3-case smoke test (off-peak + prompt-cache hits;
 the $0.0014/case figure uses peak prices, so it is an upper bound).
+
+### v2 evidence, session 4 (2026-11-27): moved from Render to Vercel
+
+Render was dropped (dashboard-only deploys, Cloudflare checks). Vercel deploy is terminal-only via `npx vercel@67.0.0`:
+- First deploy built nothing in 94 ms and served `404 NOT_FOUND`. Cause: the project was created empty first, so it got the
+  generic preset and ignored `Dockerfile.vercel`. Fix: `vercel project update --framework container --yes`, redeploy.
+- Second deploy: image built in 132.9 s, pushed in 68.3 s.
+```
+https://agentic-chat-sepia.vercel.app/_stcore/health  -> 200
+GET /_stcore/stream (Upgrade: websocket)              -> HTTP/1.1 101 Switching Protocols
+Streamlit protocol probe (rerun_script):  rendered: ['### Sign in', '[text_input] Username', '[text_input] Password', '[button] Sign in']
+                                          exceptions: []
+```
+The probe also proves `backend.py` imported on Vercel (Neon pool opened), since the script imports it before the login gate.
+Env vars set with `vercel env add NAME production` from stdin (values never printed).

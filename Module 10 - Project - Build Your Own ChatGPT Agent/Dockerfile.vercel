@@ -1,0 +1,20 @@
+# Vercel container deploy (vercel deploy picks this file up automatically).
+# Same image as ./Dockerfile; only the port differs: Vercel routes traffic to port 80.
+# Secrets come from Vercel project env vars, never from the image.
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir uv
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+COPY . .
+
+# Bake the PDF index + the ~90MB embedding model into the image so a cold start
+# doesn't download it. The dummy Tavily key only satisfies tools.py's import.
+RUN TAVILY_API_KEY=build-placeholder uv run --no-sync python ingest.py sample_notes.pdf
+
+ENV PORT=80
+EXPOSE 80
+CMD ["sh", "-c", "uv run --no-sync streamlit run ui_streamlit.py --server.address 0.0.0.0 --server.port ${PORT} --server.headless true"]
