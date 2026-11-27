@@ -91,7 +91,24 @@ agent = graph.compile(checkpointer=checkpointer)
 
 
 def all_thread_ids() -> list[str]:
-    return sorted({c.config["configurable"]["thread_id"] for c in checkpointer.list(None)})
+    """Every thread, most recently active first (checkpoint ids are time-ordered)."""
+    if DATABASE_URL:
+        # One query instead of checkpointer.list(None), which pulls every checkpoint
+        # of every thread over the network.
+        with pool.connection() as c:
+            rows = c.execute(
+                "SELECT thread_id FROM checkpoints WHERE checkpoint_ns = '' "
+                "GROUP BY thread_id ORDER BY max(checkpoint_id) DESC"
+            ).fetchall()
+        return [r[0] for r in rows]
+    return list(dict.fromkeys(c.config["configurable"]["thread_id"] for c in checkpointer.list(None)))
+
+
+def thread_title(thread_id: str) -> str:
+    """First user message, shortened, for the sidebar."""
+    msgs = agent.get_state({"configurable": {"thread_id": thread_id}}).values.get("messages", [])
+    first = next((m.content for m in msgs if m.type == "human"), "") or "Untitled chat"
+    return first[:32] + ("…" if len(first) > 32 else "")
 
 
 def pending_approval(thread_id: str) -> dict | None:

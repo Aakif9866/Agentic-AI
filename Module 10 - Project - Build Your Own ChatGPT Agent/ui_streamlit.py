@@ -2,7 +2,7 @@
 
 Talks to the graph directly (not through the API). This is also what the Docker
 image serves, so it is the public face of the agent: Klyro "Spectrum" styling,
-15 questions per visitor per hour, and each visitor only sees their own chats.
+behind a single-user login (auth.py), 15 questions per hour, all your chats in the sidebar.
 """
 import html
 import uuid
@@ -11,7 +11,11 @@ import streamlit as st
 from langchain_core.messages import AIMessageChunk, ToolMessage
 from langgraph.types import Command
 
-from backend import CHAT_MODEL, DATABASE_URL, RATE_LIMIT_PER_HOUR, agent, pending_approval, rate_limit
+from auth import require_login
+from backend import (
+    CHAT_MODEL, DATABASE_URL, RATE_LIMIT_PER_HOUR, agent, all_thread_ids,
+    pending_approval, rate_limit, thread_title,
+)
 
 st.set_page_config(page_title="Agent", page_icon="✦", layout="centered")
 
@@ -89,6 +93,11 @@ header[data-testid="stHeader"]{background:transparent}
     unsafe_allow_html=True,
 )
 
+require_login()  # nothing below runs until signed in
+
+# Titles never change once a chat starts, so cache them (one DB read per thread, ever).
+thread_title = st.cache_data(show_spinner=False)(thread_title)
+
 
 def visitor_key() -> str:
     """Who to rate-limit. Render sits behind Cloudflare, which sets CF-Connecting-IP
@@ -106,7 +115,6 @@ def badges(names) -> str:
 if "t" not in st.query_params:
     st.query_params["t"] = str(uuid.uuid4())
 thread_id = st.query_params["t"]
-st.session_state.setdefault("my_threads", {})
 cfg = {"configurable": {"thread_id": thread_id}, "recursion_limit": 25}
 messages = agent.get_state(cfg).values.get("messages", [])
 
@@ -118,12 +126,12 @@ with st.sidebar:
         st.query_params["t"] = str(uuid.uuid4())
         st.rerun()
 
-    # Only this visitor's chats. The old version listed every thread in the DB,
-    # which on a public URL would let anyone read anyone's conversation.
-    if st.session_state.my_threads:
+    # Every thread in the DB. Safe now: only the one logged-in user gets this far.
+    tids = all_thread_ids()
+    if tids:
         st.markdown('<div class="label">Your chats</div>', unsafe_allow_html=True)
-        for tid, title in reversed(st.session_state.my_threads.items()):
-            if st.button(title, key=tid, use_container_width=True, disabled=tid == thread_id):
+        for tid in tids[:30]:
+            if st.button(thread_title(tid), key=tid, use_container_width=True, disabled=tid == thread_id):
                 st.query_params["t"] = tid
                 st.rerun()
 
@@ -202,7 +210,6 @@ if prompt:
         )
         st.stop()
 
-    st.session_state.my_threads.setdefault(thread_id, prompt[:32] + ("…" if len(prompt) > 32 else ""))
     st.chat_message("user", avatar=":material/person:").write(prompt)
     with st.chat_message("assistant", avatar=":material/auto_awesome:"):
         chips, box = st.empty(), st.empty()

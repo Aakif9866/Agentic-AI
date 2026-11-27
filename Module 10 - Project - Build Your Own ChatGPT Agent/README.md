@@ -32,16 +32,16 @@ Needs `GROQ_API_KEY` and `TAVILY_API_KEY` in `.env`.
 | Model calls per conversation | 12 | `MAX_LLM_CALLS_PER_THREAD` |
 | Message length | 2000 chars | — |
 
-The hourly limit lives in memory, so it resets on redeploy, and it only applies in the Streamlit app (not the JSON API). Each visitor's sidebar lists only their own chats; the thread id lives in the URL (`?t=...`), so a refresh keeps the conversation.
+The hourly limit lives in memory, so it resets on redeploy, and it only applies in the Streamlit app (not the JSON API). **Login (v2 Phase 3):** the app and the API sit behind one username/password from env vars (`APP_USERNAME`, `APP_PASSWORD`, `APP_SECRET`; see [auth.py](auth.py)). If any is unset, nobody can log in. After login the sidebar lists every chat; the thread id lives in the URL (`?t=...`), so a refresh keeps the conversation.
 
 ## Endpoints
 
 | Method | Path | What it does |
 |---|---|---|
+| POST | `/login` | `{username, password}` → `{token}` (valid 24 h). Every route below except `/health` needs `Authorization: Bearer <token>`, else 401 |
 | POST | `/chat` | Streams the reply token by token. Body: `{thread_id, message}` |
 | GET | `/pending/{thread_id}` | The draft awaiting human approval, or `null` |
 | POST | `/approve` | Resumes a paused thread. Body: `{thread_id, approved, edited_body?}` |
-| GET | `/threads` | Every thread_id stored in `chatbot.db` |
 | GET | `/health` | `{"ok": true}` — what Render and CI poll |
 
 ## Tools the agent can call

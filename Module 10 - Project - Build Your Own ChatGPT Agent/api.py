@@ -1,12 +1,25 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from langchain_core.messages import AIMessageChunk
 from langgraph.types import Command
 
-from backend import agent, all_thread_ids, pending_approval
+from auth import check_login, make_token, verify_token
+from backend import agent, pending_approval
 
 app = FastAPI(title="ChatGPT-style Agent (Modules 6-9 combined)")
+
+
+def require_token(authorization: str = Header(default="")) -> None:
+    """Every route except /login and /health needs `Authorization: Bearer <token>`."""
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not verify_token(token):
+        raise HTTPException(401, "missing, invalid or expired token")
+
+
+class LoginIn(BaseModel):
+    username: str
+    password: str
 
 
 class ChatIn(BaseModel):
@@ -20,7 +33,14 @@ class ApproveIn(BaseModel):
     edited_body: str | None = None
 
 
-@app.post("/chat")
+@app.post("/login")
+def login(body: LoginIn):
+    if not check_login(body.username, body.password):
+        raise HTTPException(401, "wrong username or password")
+    return {"token": make_token()}
+
+
+@app.post("/chat", dependencies=[Depends(require_token)])
 def chat(body: ChatIn):
     # recursion_limit was missing entirely before Module 15's audit — a runaway
     # chat->tools->chat loop had no app-level ceiling.
@@ -36,13 +56,13 @@ def chat(body: ChatIn):
     return StreamingResponse(token_stream(), media_type="text/plain")
 
 
-@app.get("/pending/{thread_id}")
+@app.get("/pending/{thread_id}", dependencies=[Depends(require_token)])
 def pending(thread_id: str):
     """Poll this to find out whether the agent is waiting on a human."""
     return {"pending": pending_approval(thread_id)}
 
 
-@app.post("/approve")
+@app.post("/approve", dependencies=[Depends(require_token)])
 def approve(body: ApproveIn):
     """Resume a paused thread. edited_body lets the human change the draft first."""
     cfg = {"configurable": {"thread_id": body.thread_id}}
@@ -51,11 +71,6 @@ def approve(body: ApproveIn):
         resume_value["edited_body"] = body.edited_body
     result = agent.invoke(Command(resume=resume_value), cfg)
     return {"final_message": result["messages"][-1].content}
-
-
-@app.get("/threads")
-def threads():
-    return {"thread_ids": all_thread_ids()}
 
 
 @app.get("/health")
