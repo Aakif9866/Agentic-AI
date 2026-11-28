@@ -57,3 +57,21 @@ NOTES.md         write this yourself afterwards — see ../LEARNPLAN.md
 - Swap `InMemorySaver` → `SqliteSaver` and build a Streamlit UI (reuse `ui_streamlit.py` from Module 10 nearly as-is).
 - Add human approval before "booking" anything — Module 8's `interrupt()` pattern drops straight in.
 - Make the supervisor's choice visible in the UI ("now asking the weather agent...") using `stream_mode="updates"`.
+
+## Next
+
+Module 12 (MCP) comes back to this project: `Module 12 .../tripmate_mcp_example/` holds [TripMate AI using MCP](https://github.com/entbappy/TripMate-AI-Using-MCP), where the same planner's tools run as MCP servers. Understand this module's graph first, because that version builds on it.
+
+## Deploy (Vercel container)
+
+**Live: https://tripmate-ai-flax.vercel.app** — public, no login. Each plan spends Groq free-tier tokens (200k/day) and Tavily credits.
+
+```bash
+uv run streamlit run ui.py                                    # local
+npx vercel@67.0.0 link --yes --project tripmate-ai
+npx vercel@67.0.0 project update --framework container --yes  # else Vercel serves 404
+printf '%s' "$KEY" | npx vercel@67.0.0 env add GROQ_API_KEY production   # same for TAVILY_API_KEY
+npx vercel@67.0.0 deploy --prod --yes
+```
+
+[ui.py](ui.py) is a thin Streamlit front over `plan_trip()`; [Dockerfile.vercel](Dockerfile.vercel) serves it on port 80; [.vercelignore](.vercelignore) keeps `.env` and `.venv` out of the upload. No `OPENWEATHER_API_KEY` is set, so weather comes from Tavily search.
