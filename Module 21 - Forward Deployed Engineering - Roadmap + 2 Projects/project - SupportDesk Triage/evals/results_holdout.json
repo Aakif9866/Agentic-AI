@@ -1,0 +1,158 @@
+{
+  "summary": {
+    "model": "groq:openai/gpt-oss-120b",
+    "cases": 8,
+    "seconds": 10,
+    "category_accuracy": "8/8",
+    "v0_llm_decides": {
+      "unsafe_auto_replies": 1,
+      "escalation_recall": "3/4",
+      "needless_escalations": "1/4"
+    },
+    "v1_code_policy": {
+      "unsafe_auto_replies": 0,
+      "escalation_recall": "4/4",
+      "needless_escalations": "0/4"
+    },
+    "v1_correct_article_on_auto_replies": "4/4"
+  },
+  "rows": [
+    {
+      "id": 101,
+      "expected": {
+        "id": 101,
+        "ticket": "Which day does my tracking usually start updating after you dispatch?",
+        "category": "shipping",
+        "must_escalate": false,
+        "article": "KB-08"
+      },
+      "category": "shipping",
+      "v0_escalate": false,
+      "v1_escalate": false,
+      "reasons": [],
+      "article_id": "KB-08",
+      "draft": "Hi there!\u202fYour tracking link is in the dispatch email and also under\u202fOrders\u202f\u2192\u202fTrack. After we dispatch your order, the tracking information usually begins to show movement within about\u202f24\u202fhours. If you don\u2019t see an update right away, it should appear shortly.  \n\nSource: [KB-08]"
+    },
+    {
+      "id": 102,
+      "expected": {
+        "id": 102,
+        "ticket": "I set up two factor on my old phone and now I've switched phones, I have my backup codes.",
+        "category": "account",
+        "must_escalate": false,
+        "article": "KB-04"
+      },
+      "category": "account",
+      "v0_escalate": false,
+      "v1_escalate": false,
+      "reasons": [],
+      "article_id": "KB-04",
+      "draft": "Hi there! You can log in using one of the backup codes you saved when you enabled two\u2011factor authentication\u2014each code works a single time. Once you\u2019re signed in, head to **Settings\u202f>\u202fSecurity** and set up 2FA again on your new phone. Let us know if you need any more help!  \n\nSource: [KB-04]"
+    },
+    {
+      "id": 103,
+      "expected": {
+        "id": 103,
+        "ticket": "Can you add Apple Pay as a payment option?",
+        "category": "feature_request",
+        "must_escalate": false,
+        "article": "KB-10"
+      },
+      "category": "feature_request",
+      "v0_escalate": false,
+      "v1_escalate": false,
+      "reasons": [],
+      "article_id": "KB-10",
+      "draft": "Hi there!\n\nThanks for suggesting Apple\u202fPay as a payment option. We\u2019ve logged your idea and it will be reviewed by our product team during their monthly review. If it gains enough interest, it could show up on our public roadmap at brewly.example/roadmap.\n\nWe appreciate your input!\n\nSource: [KB-10]"
+    },
+    {
+      "id": 104,
+      "expected": {
+        "id": 104,
+        "ticket": "There are two pending charges from Brewly on my statement but only one invoice in the app.",
+        "category": "billing",
+        "must_escalate": false,
+        "article": "KB-02"
+      },
+      "category": "billing",
+      "v0_escalate": true,
+      "v1_escalate": false,
+      "reasons": [],
+      "article_id": "KB-02",
+      "draft": "Hi there! The extra amount you see is most likely a pending authorization from a failed payment attempt. Only the charge that appears in Settings\u202f\u2192\u202fBilling\u202f\u2192\u202fInvoices is an actual bill. Pending authorizations typically fall off your bank statement within five business days. If you still have questions after that period, feel free to let us know.  \n\nSource: [KB-02]"
+    },
+    {
+      "id": 105,
+      "expected": {
+        "id": 105,
+        "ticket": "Your courier left my parcel in the rain and it's ruined. I expect you to send a replacement box for free.",
+        "category": "shipping",
+        "must_escalate": true,
+        "article": null
+      },
+      "category": "shipping",
+      "v0_escalate": true,
+      "v1_escalate": true,
+      "reasons": [
+        "no help article matches"
+      ],
+      "article_id": null,
+      "draft": null
+    },
+    {
+      "id": 106,
+      "expected": {
+        "id": 106,
+        "ticket": "I'm reporting you to the consumer protection authority for these hidden fees.",
+        "category": "billing",
+        "must_escalate": true,
+        "article": null
+      },
+      "category": "billing",
+      "v0_escalate": true,
+      "v1_escalate": true,
+      "reasons": [
+        "refund or legal request",
+        "angry customer"
+      ],
+      "article_id": null,
+      "draft": null
+    },
+    {
+      "id": 107,
+      "expected": {
+        "id": 107,
+        "ticket": "Are you hiring baristas for your Bangalore pop-up?",
+        "category": "other",
+        "must_escalate": true,
+        "article": null
+      },
+      "category": "other",
+      "v0_escalate": false,
+      "v1_escalate": true,
+      "reasons": [
+        "no matching category"
+      ],
+      "article_id": null,
+      "draft": null
+    },
+    {
+      "id": 108,
+      "expected": {
+        "id": 108,
+        "ticket": "honestly so done with this. app crashes every single time i open it. worst purchase ever.",
+        "category": "bug",
+        "must_escalate": true,
+        "article": null
+      },
+      "category": "bug",
+      "v0_escalate": true,
+      "v1_escalate": true,
+      "reasons": [
+        "angry customer"
+      ],
+      "article_id": null,
+      "draft": null
+    }
+  ]
+}

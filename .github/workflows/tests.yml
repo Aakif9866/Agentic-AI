@@ -50,6 +50,13 @@ jobs:
           uv run --no-project --with pydantic python test_redact.py
           uv run --no-project --with python-dotenv python test_metrics.py
 
+      # --- Module 21 FDE project: escalation policy, retrieval, draft guard (no key)
+      - name: Module 21 — SupportDesk triage tests
+        working-directory: "Module 21 - Forward Deployed Engineering - Roadmap + 2 Projects/project - SupportDesk Triage"
+        run: |
+          uv sync --frozen
+          uv run python test_triage.py
+
       # --- Hygiene: no key-shaped strings committed anywhere
       - name: Secret scan
         run: |

@@ -1,0 +1,11 @@
+# Vercel container deploy (same pattern as Module 10). Vercel routes to port 80.
+# Secrets (GROQ_API_KEY) come from Vercel project env vars, never the image.
+FROM python:3.12-slim
+WORKDIR /app
+RUN pip install --no-cache-dir uv
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+COPY . .
+ENV PORT=80
+EXPOSE 80
+CMD ["sh", "-c", "uv run --no-sync uvicorn api:app --host 0.0.0.0 --port ${PORT}"]

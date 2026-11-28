@@ -1,0 +1,8 @@
+{"id": 101, "ticket": "Which day does my tracking usually start updating after you dispatch?", "category": "shipping", "must_escalate": false, "article": "KB-08"}
+{"id": 102, "ticket": "I set up two factor on my old phone and now I've switched phones, I have my backup codes.", "category": "account", "must_escalate": false, "article": "KB-04"}
+{"id": 103, "ticket": "Can you add Apple Pay as a payment option?", "category": "feature_request", "must_escalate": false, "article": "KB-10"}
+{"id": 104, "ticket": "There are two pending charges from Brewly on my statement but only one invoice in the app.", "category": "billing", "must_escalate": false, "article": "KB-02"}
+{"id": 105, "ticket": "Your courier left my parcel in the rain and it's ruined. I expect you to send a replacement box for free.", "category": "shipping", "must_escalate": true, "article": null}
+{"id": 106, "ticket": "I'm reporting you to the consumer protection authority for these hidden fees.", "category": "billing", "must_escalate": true, "article": null}
+{"id": 107, "ticket": "Are you hiring baristas for your Bangalore pop-up?", "category": "other", "must_escalate": true, "article": null}
+{"id": 108, "ticket": "honestly so done with this. app crashes every single time i open it. worst purchase ever.", "category": "bug", "must_escalate": true, "article": null}

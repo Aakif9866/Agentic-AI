@@ -97,14 +97,9 @@ Defect 1 is a security hole. Defects 2 and 3 are the mirror image: an over-eager
 
 ## 5. Deploy
 
-⚠️ **There is no public URL. This section does not meet its acceptance criterion, and I'm not going to pretend otherwise.**
+✅ **Live: https://agentic-chat-sepia.vercel.app** (closed 2026-11-27, after this study was first written).
 
-What exists:
-
-- A verified container pattern — [Module 9](../Module%209%20-%20Deployment%20%28Docker,%20CI-CD,%20Render%29)'s image **builds and serves** `/health` and a real request from inside the container, and [Module 19](../Module%2019%20-%20Project%20-%20Self-Correcting%20Multi-Agent%20App%20%28Serverless%29)'s does the same (342MB).
-- A CI gate ready to run: [`evals.yml`](../Module%2016%20-%20AI%20Agent%20Evaluation/.github/workflows/evals.yml) — though it must be moved to the repo root to execute.
-
-What's missing: a hosting account. The remaining work is ~30 minutes (Render → New Web Service → set `GROQ_API_KEY`), but it has not been done, so there is no URL to link.
+Module 10 v2 runs as a Vercel container ([Dockerfile.vercel](../Module%2010%20-%20Project%20-%20Build%20Your%20Own%20ChatGPT%20Agent/Dockerfile.vercel)), with a login, Postgres persistence and a 40-case eval gate in CI. The deploy evidence is in [Module 10's NOTES.md](../Module%2010%20-%20Project%20-%20Build%20Your%20Own%20ChatGPT%20Agent/NOTES.md) (v2 evidence, session 4). Until that date this section read "there is no public URL", and that was true.
 
 **An FDE note on this:** a project that isn't deployed hasn't been validated. Everything above is measured in a lab. The customer's actual verdict arrives the first week they use it, and it will probably be about something not in this document — response tone, or a category we didn't anticipate.
 

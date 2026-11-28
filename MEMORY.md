@@ -27,7 +27,7 @@
 | **16 Evals** | ✅ verified | `target.py`, `evals/dataset.jsonl` (31), `evals/run_evals.py`, CI yml, `NOTES.md` |
 | **18 CRAG + Self-RAG** | ✅ verified | `crag.py`, `self_rag.py`, `kb.py`, `test_caps.py`, `COMPARISON.md`, `NOTES.md` |
 | **19 Self-correcting app** | ✅ verified | `graph.py`, `api.py`, `metrics.py`+`metrics.json`, Dockerfile (**container run**), `NOTES.md` |
-| **21 FDE case study** | ✅ written | `fde-case-study.md` (§5 deploy is the one open gap), `NOTES.md` |
+| **21 FDE** | ✅ verified · **SupportDesk live** (https://supportdesk-triage.vercel.app) | `fde-case-study.md` (§5 now links Module 10's Vercel URL), `NOTES.md`; `project - SupportDesk Triage/`: `triage.py`, `kb.py`, `api.py`, `test_triage.py` (in CI), `evals/` (24 tuning + 8 held-out), `CASE_STUDY.md`, `NOTES.md`, `Dockerfile.vercel` |
 | **17 LLM Gateway** | ✅ verified | `gateway.py`, `probe_providers.py`, `test_gateway.py` (26 pass, 0 calls), `live_check.py`, `NOTES.md` — Groq+DeepSeek+Gemini, real fallback proven |
 | 20, 22 | 📋 **not built** | `README.md` build spec only. 17 needs an OpenAI key to be meaningful; 20 needs Pinecone; 22 needs Neo4j **and** a vision model |
 

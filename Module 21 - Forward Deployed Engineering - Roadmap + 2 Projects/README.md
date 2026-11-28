@@ -1,6 +1,10 @@
 # Module 21 — Forward Deployed Engineering: Roadmap + Case Study
 
-> **Not built yet.** This is the build plan. Paste `../AGENT_RULES.md` + this file to Claude Code when you're ready — though this module is mostly *you* writing, not an agent building.
+> **Built.** Two deliverables:
+> 1. [`fde-case-study.md`](fde-case-study.md): a retrospective case study of Module 10 (live at https://agentic-chat-sepia.vercel.app).
+> 2. [`project - SupportDesk Triage/`](project%20-%20SupportDesk%20Triage/): a new FDE project run end to end, from customer problem to scope, eval, build, deploy (https://supportdesk-triage.vercel.app) and measured before/after. Start at its [CASE_STUDY.md](project%20-%20SupportDesk%20Triage/CASE_STUDY.md).
+>
+> The build plan below is kept for reference.
 
 ## Goal in one line
 
