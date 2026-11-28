@@ -1,0 +1,8 @@
+# Never upload secrets, local state or the venv.
+.env
+.env.*
+.venv/
+__pycache__/
+*.pyc
+.vercel/
+tripmate_mcp_example/
